@@ -418,3 +418,36 @@ button:hover {
         border-bottom: 1px solid rgba(122, 162, 255, 0.2);
     }
 }
+.rule-stats-box {
+    margin-bottom: 20px;
+    padding: 12px;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 12px;
+    border: 1px solid rgba(122, 162, 255, 0.1);
+}
+.stats-label {
+    font-size: 0.65rem;
+    color: #7aa2ff;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+.rule-stats-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.rule-stat-item {
+    background: #1e293b;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-left: 6px solid var(--line-col, #7aa2ff); 
+    box-shadow: inset 4px 0 8px -4px var(--line-col, #7aa2ff);
+}
+.rule-stat-item span { color: #94a3b8; }
+.rule-stat-item strong { color: #f1f5f9; }
