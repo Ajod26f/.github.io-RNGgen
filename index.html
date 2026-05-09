@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RNG Generator v3 Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="language-switch">
+            <button onclick="setLanguage('en')">EN</button>
+            <button onclick="setLanguage('ja')">JA</button>
+        </div>
+
+        <h1 class="title">RNG Generator</h1>
+        <p class="subtitle" data-lang="subtitle">Professional RNG Machine</p>
+
+        <div class="panel-grid">
+            <div class="panel">
+                <h2 data-lang="settings">Generator Settings</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="min" data-lang="minimum">Min</label>
+                        <input type="number" id="min" placeholder="e.g. 1" step="any">
+                    </div>
+                    <div class="input-group">
+                        <label for="max" data-lang="maximum">Max</label>
+                        <input type="number" id="max" placeholder="e.g. 100" step="any">
+                    </div>
+                </div>
+                <div class="checkbox">
+                    <input type="checkbox" id="decimalMode" onchange="toggleDecimalOptions()">
+                    <label for="decimalMode" data-lang="decimalMode">Decimals</label>
+                </div>
+                <div class="input-group" id="precisionGroup" style="display: none;">
+                    <label for="precision" data-lang="precision">Places</label>
+                    <input type="number" id="precision" value="2" min="0" max="8">
+                </div>
+                <div class="input-group">
+                    <label for="amount" data-lang="amount">Amount</label>
+                    <input type="number" id="amount" value="10">
+                </div>
+                <div class="checkbox">
+                    <input type="checkbox" id="randomAmountMode" onchange="toggleAmountOptions()">
+                    <label for="randomAmountMode" data-lang="randomAmount">Random Amount</label>
+                </div>
+                <div id="randomAmountInputs" style="display: none; margin-bottom: 10px;">
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label for="amountMin" data-lang="amountMin">Amount Min</label>
+                            <input type="number" id="amountMin" value="1">
+                        </div>
+                        <div class="input-group">
+                            <label for="amountMax" data-lang="amountMax">Amount Max</label>
+                            <input type="number" id="amountMax" value="20">
+                        </div>
+                    </div>
+                </div>
+                <details class="advanced-panel">
+                    <summary data-lang="advancedSettings">Advanced Settings</summary>
+                    <div class="advanced-content">
+                        <div class="input-group">
+                            <label for="step" data-lang="step">Step</label>
+                            <input type="number" id="step" value="1" step="any">
+                        </div>
+                        <div class="input-group">
+                            <label for="exclude" data-lang="excludeNumbers">Exclude (csv)</label>
+                            <input type="text" id="exclude" placeholder="e.g. 4, 9">
+                        </div>
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label for="prefix" data-lang="prefix">Prefix</label>
+                                <input type="text" id="prefix">
+                            </div>
+                            <div class="input-group">
+                                <label for="suffix" data-lang="suffix">Suffix</label>
+                                <input type="text" id="suffix">
+                            </div>
+                        </div>
+                        <div class="checkbox">
+                            <input type="checkbox" id="logMode">
+                            <label for="logMode" data-lang="logMode">Log Weight</label>
+                        </div>
+                        <div class="checkbox">
+                            <input type="checkbox" id="zeroPadding">
+                            <label for="zeroPadding" data-lang="zeroPadding">Zero Padding</label>
+                        </div>
+
+                        <div class="highlight-section" style="margin-top: 15px; border-top: 1px solid #334155; padding-top: 15px;">
+                            <label style="color: #7aa2ff; font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; display: block;">✨ <span data-lang="highlightRules">Highlight Rules (Max 10)</span></label>
+                            <div id="highlightRulesContainer" style="max-height: 280px; overflow-y: auto; padding-right: 5px;">
+                                </div>
+                        </div>
+                    </div>
+                </details>
+                <div class="checkbox-group" style="display: flex; gap: 15px; margin-bottom: 10px;">
+                    <div class="checkbox">
+                        <input type="checkbox" id="unique">
+                        <label for="unique" data-lang="unique">Unique Only</label>
+                    </div>
+                    <div class="checkbox">
+                        <input type="checkbox" id="groupDuplicates">
+                        <label for="groupDuplicates" data-lang="groupDuplicates">Group Dups</label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="sortMode" data-lang="sortMode">Sort Mode</label>
+                    <select id="sortMode">
+                        <option value="none">Normal</option>
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
+                    </select>
+                </div>
+                <button onclick="generate()" data-lang="generate" style="margin-bottom: 20px;">Forge Numbers</button>
+                <div class="preset-section">
+                    <label class="preset-label">PRESET SLOTS (1-10)</label>
+                    <div class="input-group">
+                        <input type="text" id="slotName" placeholder="Slot Alias">
+                    </div>
+                    <div class="slot-grid" id="slotContainer"></div>
+                    <div class="preset-actions">
+                        <button onclick="saveSettings()" class="action-btn" data-lang="saveBtn">Save</button>
+                        <button onclick="loadSettings()" class="action-btn outline" data-lang="loadBtn">Load</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 data-lang="results" style="margin-bottom: 0;">Results</h2>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="downloadResults('txt')" class="action-btn outline" style="padding: 5px 12px; width: auto; font-size: 0.65rem; margin-top: 0;">TXT</button>
+                        <button onclick="downloadResults('csv')" class="action-btn outline" style="padding: 5px 12px; width: auto; font-size: 0.65rem; margin-top: 0;">CSV</button>
+                    </div>
+                </div>
+                <div class="result" id="result">
+                    <span style="color: #64748b;">Ready...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h3 data-lang="howToUse">How to Use RNG Generator</h3>
+            <div class="guide-grid">
+                <div class="guide-item">
+                    <span class="guide-num">01</span>
+                    <p><strong data-lang="guide1Title">Range</strong><span data-lang="guide1Desc">Set min/max/amount. Big numbers like 1e10 OK.</span></p>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-num">02</span>
+                    <p><strong data-lang="guide2Title">Advanced</strong><span data-lang="guide2Desc">Adjust Unique, Log, and CSV exclusion.</span></p>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-num">03</span>
+                    <p><strong data-lang="guide3Title">Preset</strong><span data-lang="guide3Desc">Alias settings and save to 10 slots.</span></p>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-num">04</span>
+                    <p><strong data-lang="guide4Title">Export</strong><span data-lang="guide4Desc">Download TXT/CSV with auto statistics.</span></p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-brand">RNG Generator <span class="version">v3 Pro</span></div>
+                <p>© 2026 Crafted by Ajod. For Research & Education.</p>
+                <div class="footer-status">
+                    <span class="status-dot"></span> All Systems Operational
+                </div>
+            </div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
