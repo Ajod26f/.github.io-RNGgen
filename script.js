@@ -5,7 +5,7 @@ for (let i = 0; i < 10; i++) SETTINGS_KEYS.push(`hName_${i}`, `hMin_${i}`, `hMax
 
 const translations = {
     en: { subtitle: "Professional RNG Machine", settings: "Generator Settings", minimum: "Min", maximum: "Max", decimalMode: "Decimals", precision: "Places", amount: "Amount", randomAmount: "Random Amount", amountMin: "Min Amount", amountMax: "Max Amount", unique: "Unique Only", groupDuplicates: "Group Dups", sortMode: "Sort Mode", generate: "Forge Numbers", results: "Results", saveBtn: "Save", loadBtn: "Load", advancedSettings: "Advanced Settings", highlightRules: "Highlight Rules", emptyError: "Error: Fields empty.", logicError: "Error: Min > Max.", capacityError: "Error: Range too small for unique.", generated: "Count", sum: "Sum", average: "Avg", min: "Min", max: "Max" },
-    ja: { subtitle: "このRNGが今熱い", settings: "生成設定", minimum: "最小値", maximum: "最大値", decimalMode: "小数を生成", precision: "小数桁数", amount: "個数", randomAmount: "個数をランダム化", amountMin: "最小個数", amountMax: "最大個数", unique: "重複なし", groupDuplicates: "重複をまとめる", sortMode: "並び順", generate: "数値を生成", results: "結果", saveBtn: "保存", loadBtn: "読み込み", advancedSettings: "高度な設定", highlightRules: "ハイライトルール", emptyError: "エラー: 空欄があります。", logicError: "エラー: 最小値が最大値を超えています。", capacityError: "エラー: 重複なしで生成可能な個数を超えています。", generated: "生成数", sum: "合計", average: "平均", min: "最小", max: "最大" }
+    ja: { subtitle: "このRNGが今激アツ", settings: "生成設定", minimum: "最小値", maximum: "最大値", decimalMode: "小数を生成", precision: "小数桁数", amount: "個数", randomAmount: "個数をランダム化", amountMin: "最小個数", amountMax: "最大個数", unique: "重複なし", groupDuplicates: "重複をまとめる", sortMode: "並び順", generate: "数値を生成", results: "結果", saveBtn: "保存", loadBtn: "読み込み", advancedSettings: "高度な設定", highlightRules: "ハイライトルール", emptyError: "エラー: 空欄があります。", logicError: "エラー: 最小値が最大値を超えています。", capacityError: "エラー: 重複なしで生成可能な個数を超えています。", generated: "生成数", sum: "合計", average: "平均", min: "最小", max: "最大" }
 };
 
 let slotNames = JSON.parse(localStorage.getItem("rng_names") || "{}");
@@ -53,6 +53,17 @@ function loadSettings(init = false) {
 function toggleDecimalOptions() { document.getElementById("precisionGroup").style.display = document.getElementById("decimalMode").checked ? "block" : "none"; }
 function toggleAmountOptions() { const r = document.getElementById("randomAmountMode").checked; document.getElementById("randomAmountInputs").style.display = r ? "block" : "none"; document.getElementById("amount").parentElement.style.display = r ? "none" : "block"; }
 
+function getWeightedRandom(min, max, step, prec, useLog) {
+    if (!useLog) {
+        return parseFloat((min + (Math.floor(Math.random() * (Math.floor((max - min) / step) + 1)) * step)).toFixed(prec));
+    }
+    const logMin = Math.log(min <= 0 ? 1 : min);
+    const logMax = Math.log(max <= 0 ? 2 : max);
+    const logVal = Math.exp(logMin + Math.random() * (logMax - logMin));
+    const rawVal = Math.max(min, Math.min(max, logVal));
+    return parseFloat((Math.round((rawVal - min) / step) * step + min).toFixed(prec));
+}
+
 function generate() {
     saveSettings(true);
     const resDiv = document.getElementById("result");
@@ -60,6 +71,7 @@ function generate() {
     const isUnique = document.getElementById("unique").checked, step = Number(document.getElementById("step").value) || 1;
     let amt = document.getElementById("randomAmountMode").checked ? Math.floor(Math.random() * (Number(document.getElementById("amountMax").value) - Number(document.getElementById("amountMin").value) + 1)) + Number(document.getElementById("amountMin").value) : Number(document.getElementById("amount").value);
     const isDec = document.getElementById("decimalMode").checked, prec = isDec ? Number(document.getElementById("precision").value) : 0;
+    const isLog = document.getElementById("logMode").checked;
     const exclList = (document.getElementById("exclude").value || "").split(',').map(n => n.trim()).filter(n => n !== "").map(Number).filter(n => !isNaN(n));
     const exclSet = new Set(exclList);
 
@@ -75,14 +87,14 @@ function generate() {
     if (isUnique) {
         const s = new Set();
         while (s.size < amt && safe < maxAttempts) {
-            let v = parseFloat((min + (Math.floor(Math.random() * (Math.floor((max - min) / step) + 1)) * step)).toFixed(prec));
+            let v = getWeightedRandom(min, max, step, prec, isLog);
             if (!exclSet.has(v)) s.add(v);
             safe++;
         }
         results = [...s];
     } else {
         while (results.length < amt && safe < maxAttempts) {
-            let v = parseFloat((min + (Math.floor(Math.random() * (Math.floor((max - min) / step) + 1)) * step)).toFixed(prec));
+            let v = getWeightedRandom(min, max, step, prec, isLog);
             if (!exclSet.has(v)) results.push(v);
             safe++;
         }
@@ -92,7 +104,6 @@ function generate() {
 
     const actualMin = Math.min(...results);
     const actualMax = Math.max(...results);
-
     const sort = document.getElementById("sortMode").value;
     if (sort === "asc") results.sort((a, b) => a - b); else if (sort === "desc") results.sort((a, b) => b - a);
 
@@ -116,10 +127,8 @@ function generate() {
     const tags = items.map(i => {
         let p = document.getElementById("prefix").value, s = document.getElementById("suffix").value, st = "";
         let classList = ["tag"];
-        
         if (i.v === actualMin) classList.push("min-tag");
         if (i.v === actualMax) classList.push("max-tag");
-
         for (let r of hRules) { 
             if (i.v >= r.min && i.v <= r.max) { 
                 p = r.pre + p; s = s + r.suf; 
