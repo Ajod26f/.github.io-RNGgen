@@ -2,7 +2,7 @@ let currentLanguage = "ja";
 let currentSlot = 1;
 let lastResults = { data: [], stats: {} };
 
-// 設定保存用キー（ハイライト10枠分に hName_i を追加）
+// 設定保存用キー
 const SETTINGS_KEYS = ["min", "max", "decimalMode", "precision", "amount", "randomAmountMode", "amountMin", "amountMax", "step", "exclude", "prefix", "suffix", "logMode", "zeroPadding", "sortMode", "groupDuplicates", "unique"];
 for (let i = 0; i < 10; i++) {
     SETTINGS_KEYS.push(`hName_${i}`, `hMin_${i}`, `hMax_${i}`, `hPre_${i}`, `hSuf_${i}`, `hCol_${i}`);
@@ -22,7 +22,13 @@ const translations = {
         logicError: "Error: Min is greater than Max.",
         capacityError: "Error: Range is too small for unique numbers.",
         overflowError: "Error: Number exceeds ±1.79e308 limit.",
-        generated: "Count", sum: "Sum", average: "Avg", min: "Min", max: "Max"
+        generated: "Count", sum: "Sum", average: "Avg", min: "Min", max: "Max",
+        // 使い方セクションの翻訳
+        howToUse: "How to Use RNG Generator",
+        guide1Title: "Range", guide1Desc: "Set min/max/amount. Big numbers like 1e10 OK.",
+        guide2Title: "Advanced", guide2Desc: "Adjust Unique, Log, and CSV exclusion.",
+        guide3Title: "Preset", guide3Desc: "Alias settings and save to 10 slots.",
+        guide4Title: "Export", guide4Desc: "Download TXT/CSV with auto statistics."
     },
     ja: {
         subtitle: "いいね〜このRNG", settings: "生成設定", minimum: "最小値", maximum: "最大値",
@@ -37,7 +43,13 @@ const translations = {
         logicError: "エラー: 最小値が最大値を超えています。",
         capacityError: "エラー: 重複なしで生成する個数が指定範囲より大きいです。",
         overflowError: "エラー: 数値がシステム限界を超えました。",
-        generated: "生成数", sum: "合計", average: "平均値", min: "最小値", max: "最大値"
+        generated: "生成数", sum: "合計", average: "平均値", min: "最小値", max: "最大値",
+        // 使い方セクションの翻訳
+        howToUse: "RNGジェネレーターの使い方",
+        guide1Title: "範囲設定", guide1Desc: "最小・最大値と生成個数を設定します。1e10等の大きな数値もOK。",
+        guide2Title: "高度な設定", guide2Desc: "重複排除、対数重み、CSV除外などを細かく調整できます。",
+        guide3Title: "プリセット", guide3Desc: "設定に名前を付けて、10個のスロットに保存・読込が可能です。",
+        guide4Title: "エクスポート", guide4Desc: "結果を統計情報付きでTXT/CSVとして保存できます。"
     }
 };
 
@@ -53,16 +65,17 @@ function setLanguage(l) {
     if (btn) btn.textContent = translations[l].generate;
 }
 
-// ハイライト入力欄の生成
+// ハイライト入力欄の生成（横スクロール対応版）
 function initHighlightInputs() {
     const container = document.getElementById("highlightRulesContainer");
     if (!container) return;
     let html = "";
     for (let i = 0; i < 10; i++) {
+        // CSS側の .rule-row の grid-template-columns と整合性を合わせる
         html += `
-            <div class="rule-row" style="grid-template-columns: 30px 1.2fr 1fr 1fr 1fr 1fr 45px;">
+            <div class="rule-row">
                 <span class="rule-num">${i + 1}</span>
-                <input type="text" id="hName_${i}" placeholder="Rule Name">
+                <input type="text" id="hName_${i}" placeholder="Name">
                 <input type="number" id="hMin_${i}" placeholder="Min">
                 <input type="number" id="hMax_${i}" placeholder="Max">
                 <input type="text" id="hPre_${i}" placeholder="Pre">
@@ -72,6 +85,8 @@ function initHighlightInputs() {
     }
     container.innerHTML = html;
 }
+
+// ... (以下、既存の initSlots, selectSlot, saveSettings, loadSettings などの関数が続く)
 
 function initSlots() {
     const container = document.getElementById('slotContainer');
@@ -236,7 +251,6 @@ function generate() {
     const maxV = results.length ? Math.max(...results) : 0;
     const avg = results.length ? sum / results.length : 0;
 
-    // ハイライトルールの読み込み
     const hRules = [];
     for (let i = 0; i < 10; i++) {
         const hMinRaw = document.getElementById(`hMin_${i}`).value;
@@ -280,7 +294,6 @@ function generate() {
         return `<span class="tag ${edge} ${hClass}" style="${hStyle}">${formatted}${i.c > 1 ? ' (x' + i.c + ')' : ''}</span>`;
     }).join('');
 
-    // ルール別統計
     let highlightStatsHtml = "";
     hRules.forEach((rule, idx) => {
         if (ruleCounts[idx] > 0) {
