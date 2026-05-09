@@ -180,21 +180,18 @@ input:focus, select:focus {
     text-align: center;
 }
 
-/* 各入力項目の柔軟な幅設定 */
 .rule-row input {
-    flex: 1 1 70px; /* 最小幅70px、空きがあれば広がる */
+    flex: 1 1 70px;
     min-width: 60px;
     height: 34px !important;
     padding: 4px 8px !important;
     font-size: 0.75rem !important;
 }
 
-/* Name入力だけは少し大きく */
 .rule-row input[id^="hName_"] {
     flex: 2 1 100px;
 }
 
-/* カラーピッカーの調整 */
 .rule-row input[type="color"] {
     flex: 0 0 40px;
     height: 34px !important;
