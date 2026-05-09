@@ -1,2 +1,2 @@
-# .github.io-RNGgen
+# RNGgen
 Good and Flexible as f***
