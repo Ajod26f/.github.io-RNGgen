@@ -1,4 +1,3 @@
-/* --- Base Styles --- */
 * { 
     margin: 0; 
     padding: 0; 
@@ -19,7 +18,6 @@ body {
     margin: auto; 
 }
 
-/* --- Language Switch --- */
 .language-switch { 
     display: flex; 
     justify-content: flex-end; 
@@ -39,7 +37,6 @@ body {
     margin: 0; 
 }
 
-/* --- Typography --- */
 .title { 
     font-size: clamp(2rem, 5vw, 3.5rem); 
     font-weight: 900; 
@@ -54,7 +51,6 @@ body {
     font-size: 0.9rem; 
 }
 
-/* --- Layout Panels --- */
 .panel-grid { 
     display: grid; 
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
@@ -70,7 +66,6 @@ body {
     padding: 20px; 
 }
 
-/* --- Form Elements --- */
 .input-grid { 
     display: grid; 
     grid-template-columns: 1fr 1fr; 
@@ -119,7 +114,6 @@ input:focus, select:focus {
     cursor: pointer; 
 }
 
-/* --- Advanced Panel --- */
 .advanced-panel { 
     margin: 15px 0; 
     border: 1px solid #334155; 
@@ -143,7 +137,6 @@ input:focus, select:focus {
     gap: 15px;
 }
 
-/* --- Highlight Rules (Responsive/No Horizontal Scroll) --- */
 .highlight-section {
     margin-top: 10px;
 }
@@ -157,7 +150,7 @@ input:focus, select:focus {
 
 .rule-row {
     display: flex;
-    flex-wrap: wrap; /* スマホで自動折り返し */
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
     background: rgba(30, 41, 59, 0.6); 
@@ -201,7 +194,6 @@ input:focus, select:focus {
     cursor: pointer;
 }
 
-/* --- Slot System --- */
 .preset-section { 
     margin-top: 10px; 
     padding-top: 15px; 
@@ -279,7 +271,6 @@ input:focus, select:focus {
     color: white; 
 }
 
-/* --- Buttons --- */
 button { 
     width: 100%; 
     padding: 15px; 
@@ -299,7 +290,6 @@ button:hover {
     filter: brightness(1.1); 
 }
 
-/* --- Results Area --- */
 .result { 
     background: #020617; 
     border-radius: 16px; 
@@ -346,8 +336,37 @@ button:hover {
     transition: 0.3s; 
 }
 
-.min-tag { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); }
-.max-tag { border-color: #f97316; background: rgba(249, 115, 22, 0.2); }
+.min-tag { 
+    border: 2px solid #3b82f6 !important; 
+    background: rgba(59, 130, 246, 0.2) !important; 
+    color: #eff6ff !important; 
+}
+.min-tag::before {
+    content: "MIN";
+    font-size: 0.6rem;
+    background: #3b82f6;
+    color: white;
+    padding: 1px 4px;
+    border-radius: 4px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.max-tag { 
+    border: 2px solid #ef4444 !important; 
+    background: rgba(239, 68, 68, 0.2) !important; 
+    color: #fef2f2 !important; 
+}
+.max-tag::before {
+    content: "MAX";
+    font-size: 0.6rem;
+    background: #ef4444;
+    color: white;
+    padding: 1px 4px;
+    border-radius: 4px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
 
 .tag.custom-highlight {
     font-weight: bold;
@@ -357,7 +376,6 @@ button:hover {
     box-shadow: 0 0 8px var(--h-glow);
 }
 
-/* --- Error & Guide --- */
 .error { 
     color: #ff9494; padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.4); 
     background: rgba(239, 68, 68, 0.15); backdrop-filter: blur(8px); font-size: 0.75rem; 
@@ -383,7 +401,6 @@ button:hover {
 .guide-item p { font-size: 0.8rem; color: #94a3b8; line-height: 1.6; }
 .guide-item strong { color: #f1f5f9; display: block; margin-bottom: 4px; }
 
-/* --- Footer --- */
 .footer { margin-top: 60px; padding: 30px 0; border-top: 1px solid rgba(51, 65, 85, 0.5); text-align: center; }
 .footer-brand { font-weight: 800; letter-spacing: 1px; color: #64748b; margin-bottom: 10px; }
 .footer-brand .version { font-size: 0.6rem; background: #1e293b; padding: 2px 6px; border-radius: 4px; margin-left: 8px; color: #7aa2ff; }
@@ -392,7 +409,6 @@ button:hover {
 .status-dot { width: 6px; height: 6px; background: #00ffd5; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #00ffd5; animation: pulse 2s infinite; }
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-/* --- Tablet/Mobile Specific Adjustments --- */
 @media (max-width: 480px) {
     .rule-num {
         width: 100%;
