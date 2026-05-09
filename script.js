@@ -5,7 +5,7 @@ for (let i = 0; i < 10; i++) SETTINGS_KEYS.push(`hName_${i}`, `hMin_${i}`, `hMax
 
 const translations = {
     en: { subtitle: "Professional RNG Machine", settings: "Generator Settings", minimum: "Min", maximum: "Max", decimalMode: "Decimals", precision: "Places", amount: "Amount", randomAmount: "Random Amount", amountMin: "Min Amount", amountMax: "Max Amount", unique: "Unique Only", groupDuplicates: "Group Dups", sortMode: "Sort Mode", generate: "Forge Numbers", results: "Results", saveBtn: "Save", loadBtn: "Load", advancedSettings: "Advanced Settings", highlightRules: "Highlight Rules", emptyError: "Error: Fields empty.", logicError: "Error: Min > Max.", capacityError: "Error: Range too small for unique.", generated: "Count", sum: "Sum", average: "Avg", min: "Min", max: "Max" },
-    ja: { subtitle: "プロ仕様RNGツール", settings: "生成設定", minimum: "最小値", maximum: "最大値", decimalMode: "小数を生成", precision: "小数桁数", amount: "個数", randomAmount: "個数をランダム化", amountMin: "最小個数", amountMax: "最大個数", unique: "重複なし", groupDuplicates: "重複をまとめる", sortMode: "並び順", generate: "数値を生成", results: "結果", saveBtn: "保存", loadBtn: "読み込み", advancedSettings: "高度な設定", highlightRules: "ハイライトルール", emptyError: "エラー: 空欄があります。", logicError: "エラー: 最小値が最大値を超えています。", capacityError: "エラー: 重複なしで生成可能な個数を超えています。", generated: "生成数", sum: "合計", average: "平均", min: "最小", max: "最大" }
+    ja: { subtitle: "このRNGが今熱い", settings: "生成設定", minimum: "最小値", maximum: "最大値", decimalMode: "小数を生成", precision: "小数桁数", amount: "個数", randomAmount: "個数をランダム化", amountMin: "最小個数", amountMax: "最大個数", unique: "重複なし", groupDuplicates: "重複をまとめる", sortMode: "並び順", generate: "数値を生成", results: "結果", saveBtn: "保存", loadBtn: "読み込み", advancedSettings: "高度な設定", highlightRules: "ハイライトルール", emptyError: "エラー: 空欄があります。", logicError: "エラー: 最小値が最大値を超えています。", capacityError: "エラー: 重複なしで生成可能な個数を超えています。", generated: "生成数", sum: "合計", average: "平均", min: "最小", max: "最大" }
 };
 
 let slotNames = JSON.parse(localStorage.getItem("rng_names") || "{}");
@@ -90,7 +90,6 @@ function generate() {
 
     if (results.length === 0) return;
 
-    // 最小値と最大値を特定（バッジ付与用）
     const actualMin = Math.min(...results);
     const actualMax = Math.max(...results);
 
@@ -118,7 +117,6 @@ function generate() {
         let p = document.getElementById("prefix").value, s = document.getElementById("suffix").value, st = "";
         let classList = ["tag"];
         
-        // 最小値・最大値クラスの付与
         if (i.v === actualMin) classList.push("min-tag");
         if (i.v === actualMax) classList.push("max-tag");
 
