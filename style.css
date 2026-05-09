@@ -1,0 +1,200 @@
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+body { background: #0f1117; color: white; min-height: 100vh; padding: 20px; background-image: radial-gradient(circle at top left, #1f2a44 0%, transparent 35%); }
+.container { max-width: 1200px; margin: auto; }
+
+.language-switch { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 15px; }
+.language-switch button { padding: 4px 10px; background: #1e293b; color: white; border: 1px solid #334155; border-radius: 6px; cursor: pointer; font-size: 11px; width: auto; margin: 0; }
+
+.title { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(90deg, #7aa2ff, #00ffd5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.subtitle { color: #9ca3af; margin-bottom: 30px; font-size: 0.9rem; }
+
+.panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; align-items: start; }
+.panel { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: 20px; }
+
+.input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.input-group { margin-bottom: 12px; }
+.input-group label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 0.75rem; }
+.input-group input, .input-group select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 0.9rem; outline: none; }
+.input-group input:focus { border-color: #7aa2ff; }
+
+.checkbox { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 0.8rem; cursor: pointer; }
+.advanced-panel { margin: 15px 0; border: 1px solid #334155; border-radius: 12px; background: rgba(15, 23, 42, 0.4); }
+.advanced-panel summary { cursor: pointer; color: #7aa2ff; font-weight: bold; padding: 10px; font-size: 0.8rem; }
+.advanced-content { padding: 15px; border-top: 1px solid #334155; }
+
+/* ハイライト枠のデザイン */
+.rule-row { display: grid; grid-template-columns: 20px 1fr 1fr 0.6fr 0.6fr 40px; gap: 5px; align-items: center; margin-bottom: 8px; }
+.rule-row input { padding: 6px !important; font-size: 0.7rem !important; height: 30px; }
+.rule-row input[type="color"] { padding: 0 !important; border: none; background: none; cursor: pointer; }
+.rule-num { font-size: 0.6rem; color: #64748b; font-weight: bold; }
+
+.preset-section { margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+.preset-label { font-size: 0.65rem; color: #64748b; font-weight: bold; display: block; margin-bottom: 10px; letter-spacing: 1px; }
+.slot-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
+.slot-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; height: 48px; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.2s; font-size: 0.8rem; }
+.slot-btn.active { background: #7aa2ff; color: #0f172a; border-color: #7aa2ff; font-weight: bold; box-shadow: 0 0 12px rgba(122, 162, 255, 0.4); }
+.slot-alias { font-size: 0.5rem; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 90%; }
+.preset-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.action-btn { background: #334155; padding: 10px; font-size: 0.75rem; font-weight: bold; border-radius: 10px; border: none; cursor: pointer; color: white; }
+.action-btn.outline { background: transparent; border: 1px solid #334155; color: white; }
+
+button { width: 100%; padding: 15px; border: none; border-radius: 12px; background: linear-gradient(90deg, #7aa2ff, #00ffd5); color: #0f172a; font-size: 1rem; font-weight: 800; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+.result { background: #020617; border-radius: 16px; padding: 15px; min-height: 500px; max-height: 85vh; overflow-y: auto; border: 1px solid #1e293b; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 8px; margin-bottom: 20px; }
+.stats div { background: #1e293b; padding: 8px; border-radius: 10px; text-align: center; font-size: 0.7rem; border: 1px solid #334155; }
+.stats strong { display: block; color: #64748b; font-size: 0.6rem; margin-bottom: 2px; }
+
+.tag { display: inline-block; padding: 6px 12px; margin: 4px; border-radius: 8px; background: #1e293b; color: #38bdf8; font-size: 0.85rem; border: 1px solid #334155; word-break: break-all; transition: 0.3s; }
+.min-tag { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); }
+.max-tag { border-color: #f97316; background: rgba(249, 115, 22, 0.2); }
+
+/* カスタムハイライト用のスタイル */
+.tag.custom-highlight {
+    font-weight: bold;
+    border-color: var(--h-col);
+    color: var(--h-col);
+    background: var(--h-bg);
+    box-shadow: 0 0 8px var(--h-glow);
+}
+
+.error { 
+    color: #ff9494; padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.4); 
+    background: rgba(239, 68, 68, 0.15); backdrop-filter: blur(8px); font-size: 0.75rem; 
+    font-weight: bold; text-align: center; margin: 10px 0; animation: shake 0.4s ease-in-out;
+}
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+.guide-section { margin-top: 40px; padding: 30px; background: rgba(15, 23, 42, 0.3); border-radius: 20px; border: 1px dashed rgba(122, 162, 255, 0.3); }
+.guide-section h3 { color: #7aa2ff; font-size: 1.2rem; margin-bottom: 20px; text-align: center; }
+.guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+.guide-item { position: relative; padding-left: 45px; }
+.guide-num { position: absolute; left: 0; top: 0; font-size: 1.2rem; font-weight: 900; color: rgba(122, 162, 255, 0.2); font-style: italic; }
+.guide-item p { font-size: 0.8rem; color: #94a3b8; line-height: 1.6; }
+.guide-item strong { color: #f1f5f9; display: block; margin-bottom: 4px; }
+
+.footer { margin-top: 60px; padding: 30px 0; border-top: 1px solid rgba(51, 65, 85, 0.5); text-align: center; }
+.footer-brand { font-weight: 800; letter-spacing: 1px; color: #64748b; margin-bottom: 10px; }
+.footer-brand .version { font-size: 0.6rem; background: #1e293b; padding: 2px 6px; border-radius: 4px; margin-left: 8px; color: #7aa2ff; }
+.footer p { font-size: 0.7rem; color: #475569; }
+.footer-status { margin-top: 15px; font-size: 0.6rem; color: #00ffd5; display: flex; align-items: center; justify-content: center; gap: 6px; text-transform: uppercase; letter-spacing: 2px; }
+.status-dot { width: 6px; height: 6px; background: #00ffd5; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #00ffd5; animation: pulse 2s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+/* --- Highlight Rules Section Styling --- */
+.highlight-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(122, 162, 255, 0.2);
+}
+
+/* 高度な設定の中身 */
+.advanced-content {
+    padding: 15px; /* 余白を適正化 */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* ハイライトセクションのコンテナ */
+.highlight-section {
+    width: 100%;
+}
+
+/* スクロールエリア */
+#highlightRulesContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%; /* ここが重要 */
+    overflow-x: hidden; /* 横に突き出さないように */
+}
+
+
+.rule-row {
+    display: grid;
+    grid-template-columns: 30px 1.2fr 1.2fr 1.5fr 1.5fr 50px;
+    gap: 10px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05); 
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-sizing: border-box; 
+    width: 100%;
+}
+
+.rule-row:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(122, 162, 255, 0.3);
+}
+
+
+.rule-row input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px !important;
+    font-size: 0.8rem !important;
+}
+
+.rule-num {
+    font-size: 0.7rem;
+    color: #7aa2ff;
+    font-weight: 800;
+    text-align: center;
+}
+
+input[type="number"], 
+input[type="text"], 
+select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    /* 白飛び防止 */
+    background-color: #0f172a !important; 
+    /* 文字色をグレーに固定 */
+    color: #f1f5f9 !important;
+    border: 1px solid rgba(122, 162, 255, 0.2);
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+input::placeholder {
+    color: #475569;
+}
+
+/* フォーカス時のエフェクト */
+input:focus, select:focus {
+    background-color: #1e293b !important;
+    border-color: #7aa2ff !important;
+    box-shadow: 0 0 0 3px rgba(122, 162, 255, 0.2);
+}
+
+/* ハイライト行の背景との対比 */
+.rule-row {
+    display: grid;
+    grid-template-columns: 30px 1.2fr 1.2fr 1.5fr 1.5fr 50px;
+    gap: 10px;
+    align-items: center;
+    /* 境界をはっきり */
+    background: rgba(30, 41, 59, 0.5); 
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+/* CPが白くならないように調整 */
+input[type="color"] {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    height: 34px;
+}
