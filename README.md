@@ -2,6 +2,7 @@
 RNG FORGE
 
 ◆　EN
+
 Advanced Random Number Generator Tool for Engineers
 
 RNG Generator v3 Pro is a professional-grade random number generation tool designed for engineers and advanced users. In addition to standard random generation, it provides detailed customization features required for practical applications and specialized simulations. Humanity really looked at “random numbers” and decided they needed enterprise-level configuration panels for them. Admirable, honestly.
