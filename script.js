@@ -186,17 +186,18 @@ function generate() {
 
     const excludes = parseExcludes(document.getElementById("exclude").value);
 
+    const rangeCount = Math.floor(((max - min) + (step * 0.000001)) / step) + 1;
+
     if (isUnique) {
-        const totalSlots = Math.floor(((max - min) + (step * 0.000001)) / step) + 1;
         let blocked = 0;
-        if (totalSlots < 1000000) {
-            for (let i = 0; i < totalSlots; i++) {
+        if (rangeCount < 1000000) {
+            for (let i = 0; i < rangeCount; i++) {
                 const checkVal = parseFloat((min + i * step).toFixed(prec));
                 if (isExcluded(checkVal, excludes)) blocked++;
             }
         } else { blocked = excludes.singles.size; }
 
-        const available = totalSlots - blocked;
+        const available = rangeCount - blocked;
         if (amt > available) {
             const msg = currentLanguage === "ja" ? `生成可能な数は最大 ${available} 個です。` : `Max available is ${available}.`;
             resDiv.innerHTML = `<div class="error">${msg}</div>`; return;
@@ -204,9 +205,16 @@ function generate() {
     }
 
     let results = [], resultSet = new Set(), attempts = 0, maxAt = Math.max(amt * 250, 200000);
+    
     while (results.length < amt && attempts < maxAt) {
-        let val = isLog ? Math.exp(Math.log(min || 1e-15) + Math.random() * (Math.log(max || 1) - Math.log(min || 1e-15))) : min + Math.random() * (max - min);
-        const roundedVal = parseFloat((Math.round((val - min) / step) * step + min).toFixed(prec));
+        let roundedVal;
+        if (isLog) {
+            let val = Math.exp(Math.log(min || 1e-15) + Math.random() * (Math.log(max || 1) - Math.log(min || 1e-15)));
+            roundedVal = parseFloat((Math.round((val - min) / step) * step + min).toFixed(prec));
+        } else {
+            let randomIndex = Math.floor(Math.random() * rangeCount);
+            roundedVal = parseFloat((min + randomIndex * step).toFixed(prec));
+        }
         
         if (roundedVal >= min && roundedVal <= max && !isExcluded(roundedVal, excludes)) {
             const strVal = roundedVal.toFixed(prec);
@@ -221,7 +229,6 @@ function generate() {
     lastGeneratedData = [...results];
     renderResultsUI(results, min, max, prec, isDec);
 }
-
 function renderResultsUI(results, min, max, prec, isDec) {
     const resDiv = document.getElementById("result"), t = translations[currentLanguage];
     const sortMode = document.getElementById("sortMode").value;
