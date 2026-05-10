@@ -29,18 +29,27 @@
                         <input type="number" id="max" placeholder="e.g. 100" step="any">
                     </div>
                 </div>
+                
                 <div class="checkbox">
                     <input type="checkbox" id="decimalMode" onchange="toggleDecimalOptions()">
                     <label for="decimalMode" data-lang="decimalMode">Decimals</label>
                 </div>
-                <div class="input-group" id="precisionGroup" style="display: none;">
-                    <label for="precision" data-lang="precision">Places</label>
-                    <input type="number" id="precision" value="2" min="0" max="8">
+                
+                <div class="input-group" id="precisionGroup" style="display: none; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <label for="precision" data-lang="precision" style="margin-bottom: 0;">Places</label>
+                        <span id="precisionValue" style="color: #7aa2ff; font-weight: bold; font-size: 0.85rem;">8</span>
+                    </div>
+                    <input type="range" id="precision" min="0" max="10" value="8" 
+                           style="cursor: pointer; accent-color: #7aa2ff; width: 100%;" 
+                           oninput="updatePrecisionDisplay(this.value)">
                 </div>
+
                 <div class="input-group">
                     <label for="amount" data-lang="amount">Amount</label>
                     <input type="number" id="amount" value="10">
                 </div>
+
                 <div class="checkbox">
                     <input type="checkbox" id="randomAmountMode" onchange="toggleAmountOptions()">
                     <label for="randomAmountMode" data-lang="randomAmount">Random Amount</label>
@@ -57,12 +66,13 @@
                         </div>
                     </div>
                 </div>
+
                 <details class="advanced-panel">
                     <summary data-lang="advancedSettings">Advanced Settings</summary>
                     <div class="advanced-content">
                         <div class="input-group">
                             <label for="step" data-lang="step">Step</label>
-                            <input type="number" id="step" value="1" step="any">
+                            <input type="number" id="step" value="0.0000000001" step="any">
                         </div>
                         <div class="input-group">
                             <label for="exclude" data-lang="excludeNumbers">Exclude (csv)</label>
@@ -89,11 +99,11 @@
 
                         <div class="highlight-section" style="margin-top: 15px; border-top: 1px solid #334155; padding-top: 15px;">
                             <label style="color: #7aa2ff; font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; display: block;">✨ <span data-lang="highlightRules">Highlight Rules (Max 10)</span></label>
-                            <div id="highlightRulesContainer" style="max-height: 280px; overflow-y: auto; padding-right: 5px;">
-                                </div>
+                            <div id="highlightRulesContainer" style="max-height: 280px; overflow-y: auto; padding-right: 5px;"></div>
                         </div>
                     </div>
                 </details>
+
                 <div class="checkbox-group" style="display: flex; gap: 15px; margin-bottom: 10px;">
                     <div class="checkbox">
                         <input type="checkbox" id="unique">
@@ -104,6 +114,7 @@
                         <label for="groupDuplicates" data-lang="groupDuplicates">Group Dups</label>
                     </div>
                 </div>
+
                 <div class="input-group">
                     <label for="sortMode" data-lang="sortMode">Sort Mode</label>
                     <select id="sortMode">
@@ -112,7 +123,9 @@
                         <option value="desc">Descending</option>
                     </select>
                 </div>
+
                 <button onclick="generate()" data-lang="generate" style="margin-bottom: 20px;">Forge Numbers</button>
+
                 <div class="preset-section">
                     <label class="preset-label">PRESET SLOTS (1-10)</label>
                     <div class="input-group">
@@ -145,7 +158,7 @@
             <div class="guide-grid">
                 <div class="guide-item">
                     <span class="guide-num">01</span>
-                    <p><strong data-lang="guide1Title">Range</strong><span data-lang="guide1Desc">Set min/max/amount. Big numbers like 1e10 OK.</span></p>
+                    <p><strong data-lang="guide1Title">Range</strong><span data-lang="guide1Desc">Set min/max/amount. Big numbers OK.</span></p>
                 </div>
                 <div class="guide-item">
                     <span class="guide-num">02</span>
