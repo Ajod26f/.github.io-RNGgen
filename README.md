@@ -7,7 +7,7 @@
 <br />
 
 <div align="center">
-  <h1>🛠️ RNG Generator v3 Pro</h1>
+  <h1>RNG Generator v3 Pro</h1>
   <p><b>Advanced Random Number Generator Tool for Engineers</b></p>
   <p>
     Professional-grade random generation with enterprise-level configuration panels. 
@@ -56,7 +56,7 @@ Define numeric ranges to apply specific colors and labels. Perfect for identifyi
 
 ---
 
-### 🛡️ Security & Privacy
+### Security & Privacy
 
 <blockquote>
   <b>Local-First Architecture:</b> This tool processes everything within your browser context. No data, numbers, or configuration strings ever touch a server.
@@ -68,7 +68,7 @@ Define numeric ranges to apply specific colors and labels. Perfect for identifyi
 
 ---
 
-### ⚖️ License & Contribution
+### License & Contribution
 
 This tool is provided "as-is". Civilization advances one configurable RNG at a time—feel free to fork, modify, and redistribute.
 
