@@ -22,7 +22,7 @@ const translations = {
         generated: "Count", sum: "Sum", average: "Avg", min: "Min", max: "Max", ruleStats: "Rule Stats",
         howToUse: "How to Use RNG Generator",
         guide1Title: "Range", guide1Desc: "Set min/max/amount. Big numbers OK.",
-        guide2Title: "Advanced", guide2Desc: "Adjust Unique, Log, and CSV exclusion.",
+        guide2Title: "Advanced", guide2Desc: "Adjust Unique, Log, and CSV exclusion (e.g. 10, 20-50).",
         guide3Title: "Preset", guide3Desc: "Alias settings and save to 10 slots.",
         guide4Title: "Export", guide4Desc: "Download TXT/CSV with auto statistics."
     },
@@ -35,7 +35,7 @@ const translations = {
         generated: "生成数", sum: "合計", average: "平均値", min: "最小値", max: "最大値", ruleStats: "ルール統計",
         howToUse: "操作ガイド",
         guide1Title: "基本設定", guide1Desc: "最小・最大・個数を設定。巨大な数値も対応。",
-        guide2Title: "詳細機能", guide2Desc: "重複排除、対数重み、除外リスト設定可能。",
+        guide2Title: "詳細機能", guide2Desc: "重複排除、除外（10, 20-50形式対応）設定可能。",
         guide3Title: "プリセット", guide3Desc: "設定を10個のスロットに保存可能。",
         guide4Title: "書き出し", guide4Desc: "TXT/CSV形式で統計と共に保存可能。"
     }
@@ -64,15 +64,7 @@ function initHighlightInputs() {
     const container = document.getElementById("highlightRulesContainer");
     let html = "";
     for (let i = 0; i < 10; i++) {
-        html += `<div class="rule-row">
-            <span class="rule-num">${i + 1}</span>
-            <input type="text" id="hName_${i}" placeholder="Name">
-            <input type="number" id="hMin_${i}" placeholder="Min">
-            <input type="number" id="hMax_${i}" placeholder="Max">
-            <input type="text" id="hPre_${i}" placeholder="Pre">
-            <input type="text" id="hSuf_${i}" placeholder="Suf">
-            <input type="color" id="hCol_${i}" value="#7aa2ff">
-        </div>`;
+        html += `<div class="rule-row"><span class="rule-num">${i + 1}</span><input type="text" id="hName_${i}" placeholder="Name"><input type="number" id="hMin_${i}" placeholder="Min"><input type="number" id="hMax_${i}" placeholder="Max"><input type="text" id="hPre_${i}" placeholder="Pre"><input type="text" id="hSuf_${i}" placeholder="Suf"><input type="color" id="hCol_${i}" value="#7aa2ff"></div>`;
     }
     container.innerHTML = html;
 }
@@ -117,13 +109,38 @@ function loadSettings() {
     toggleAmountOptions();
 }
 
+function parseExcludes(input) {
+    const excludes = { singles: new Set(), ranges: [] };
+    if (!input.trim()) return excludes;
+    input.split(',').forEach(part => {
+        const p = part.trim();
+        if (p.includes('-')) {
+            const [start, end] = p.split('-').map(Number);
+            if (!isNaN(start) && !isNaN(end)) excludes.ranges.push({ start: Math.min(start, end), end: Math.max(start, end) });
+        } else {
+            const val = Number(p); if (!isNaN(val)) excludes.singles.add(val);
+        }
+    });
+    return excludes;
+}
+
+function isExcluded(val, excludes) {
+    if (excludes.singles.has(val)) return true;
+    for (const r of excludes.ranges) { if (val >= r.start && val <= r.end) return true; }
+    return false;
+}
+
 function generate() {
     const resDiv = document.getElementById("result");
     const minRaw = document.getElementById("min").value, maxRaw = document.getElementById("max").value;
     const amountRaw = document.getElementById("amount").value, stepRaw = document.getElementById("step").value;
-    const min = Number(minRaw), max = Number(maxRaw), step = Number(stepRaw);
+    
+    let min = Number(minRaw), max = Number(maxRaw), step = Number(stepRaw);
     const isDec = document.getElementById("decimalMode").checked, prec = isDec ? Number(document.getElementById("precision").value) : 0;
     const isLog = document.getElementById("logMode").checked, isUnique = document.getElementById("unique").checked;
+
+    const minStepLimit = isDec ? Math.pow(10, -prec) : 1;
+    if (step < minStepLimit) step = minStepLimit;
 
     let errorMsg = "";
     if (minRaw === "" || maxRaw === "" || (!document.getElementById("randomAmountMode").checked && amountRaw === "")) {
@@ -133,23 +150,42 @@ function generate() {
     } else if (min > max) {
         errorMsg = currentLanguage === "ja" ? "最小値が最大値を超えています。" : "Min cannot be greater than Max.";
     }
-
     if (errorMsg) { resDiv.innerHTML = `<div class="error">${errorMsg}</div>`; return; }
 
     let amt = document.getElementById("randomAmountMode").checked ? 
         Math.floor(Math.random() * (Number(document.getElementById("amountMax").value) - Number(document.getElementById("amountMin").value) + 1)) + Number(document.getElementById("amountMin").value) : Number(amountRaw);
 
-    if (isUnique && amt > (Math.floor((max - min) / step) + 1)) {
-        const msg = currentLanguage === "ja" ? "重複無しで生成する個数が範囲を超えています。" : "Unique range capacity exceeded.";
-        resDiv.innerHTML = `<div class="error">${msg}</div>`; return;
+    const excludes = parseExcludes(document.getElementById("exclude").value);
+
+    if (isUnique) {
+        const totalSlots = Math.floor(((max - min) + (step * 0.000001)) / step) + 1;
+        let blocked = 0;
+        if (totalSlots < 1000000) {
+            for (let i = 0; i < totalSlots; i++) {
+                const checkVal = parseFloat((min + i * step).toFixed(prec));
+                if (isExcluded(checkVal, excludes)) blocked++;
+            }
+        } else { blocked = excludes.singles.size; }
+
+        const available = totalSlots - blocked;
+        if (amt > available) {
+            const msg = currentLanguage === "ja" ? `生成可能な数は最大 ${available} 個です。` : `Max available is ${available}.`;
+            resDiv.innerHTML = `<div class="error">${msg}</div>`; return;
+        }
     }
 
-    const exclude = new Set((document.getElementById("exclude").value || "").split(',').map(n => Number(n.trim())).filter(n => !isNaN(n)));
-    let results = [], attempts = 0;
-    while (results.length < amt && attempts < 100000) {
+    let results = [], resultSet = new Set(), attempts = 0, maxAt = Math.max(amt * 250, 200000);
+    while (results.length < amt && attempts < maxAt) {
         let val = isLog ? Math.exp(Math.log(min || 1e-15) + Math.random() * (Math.log(max || 1) - Math.log(min || 1e-15))) : min + Math.random() * (max - min);
-        val = parseFloat((Math.round((val - min) / step) * step + min).toFixed(prec));
-        if (val >= min && val <= max && !exclude.has(val) && (!isUnique || !results.includes(val))) results.push(val);
+        const roundedVal = parseFloat((Math.round((val - min) / step) * step + min).toFixed(prec));
+        
+        if (roundedVal >= min && roundedVal <= max && !isExcluded(roundedVal, excludes)) {
+            const strVal = roundedVal.toFixed(prec);
+            if (!isUnique || !resultSet.has(strVal)) {
+                results.push(roundedVal);
+                if (isUnique) resultSet.add(strVal);
+            }
+        }
         attempts++;
     }
 
@@ -171,23 +207,14 @@ function renderResultsUI(results, min, max, prec, isDec) {
     for (let i = 0; i < 10; i++) {
         const hMin = document.getElementById(`hMin_${i}`).value, hMax = document.getElementById(`hMax_${i}`).value;
         if (hMin !== "" || hMax !== "") {
-            hRules.push({
-                min: hMin === "" ? -Infinity : Number(hMin),
-                max: hMax === "" ? Infinity : Number(hMax),
-                pre: document.getElementById(`hPre_${i}`).value,
-                suf: document.getElementById(`hSuf_${i}`).value,
-                col: document.getElementById(`hCol_${i}`).value,
-                name: document.getElementById(`hName_${i}`).value || `Rule ${i+1}`,
-                count: 0
-            });
+            hRules.push({ min: hMin === "" ? -Infinity : Number(hMin), max: hMax === "" ? Infinity : Number(hMax), pre: document.getElementById(`hPre_${i}`).value, suf: document.getElementById(`hSuf_${i}`).value, col: document.getElementById(`hCol_${i}`).value, name: document.getElementById(`hName_${i}`).value || `Rule ${i+1}`, count: 0 });
         }
     }
     lastUsedRules = hRules;
 
     const tagData = results.map(v => {
         let p = document.getElementById("prefix").value, s = document.getElementById("suffix").value, st = "", cls = ["tag"];
-        if (v === actualMin) cls.push("min-tag");
-        if (v === actualMax) cls.push("max-tag");
+        if (v === actualMin) cls.push("min-tag"); if (v === actualMax) cls.push("max-tag");
         for (let r of hRules) {
             if (v >= r.min && v <= r.max) {
                 r.count++; p = r.pre + p; s = s + r.suf;
@@ -210,18 +237,10 @@ function renderResultsUI(results, min, max, prec, isDec) {
     }).join('');
 
     const fmt = (n) => (n > 1e9 || n < -1e9 || (n !== 0 && Math.abs(n) < 1e-4)) ? n.toExponential(2) : n.toLocaleString();
-
-    let statsHtml = `<div class="stats">
-        <div><strong>${t.generated}</strong>${results.length}</div>
-        <div><strong>${t.sum}</strong>${fmt(sum)}</div>
-        <div><strong>${t.average}</strong>${fmt(sum / (results.length || 1))}</div>
-        <div><strong>${t.min}</strong>${fmt(actualMin)}</div>
-        <div><strong>${t.max}</strong>${fmt(actualMax)}</div>
-    </div>`;
+    let statsHtml = `<div class="stats"><div><strong>${t.generated}</strong>${results.length}</div><div><strong>${t.sum}</strong>${fmt(sum)}</div><div><strong>${t.average}</strong>${fmt(sum / (results.length || 1))}</div><div><strong>${t.min}</strong>${fmt(actualMin)}</div><div><strong>${t.max}</strong>${fmt(actualMax)}</div></div>`;
 
     if (hRules.length > 0) {
-        statsHtml += `<div class="rule-stats-box"><div class="stats-label">${t.ruleStats}</div><div class="rule-stats-grid">` + 
-            hRules.filter(r => r.count > 0).map(r => `<div class="rule-stat-item" style="--line-col: ${r.col}"><span>${r.name}</span><strong>${r.count}</strong></div>`).join('') + `</div></div>`;
+        statsHtml += `<div class="rule-stats-box"><div class="stats-label">${t.ruleStats}</div><div class="rule-stats-grid">` + hRules.filter(r => r.count > 0).map(r => `<div class="rule-stat-item" style="--line-col: ${r.col}"><span>${r.name}</span><strong>${r.count}</strong></div>`).join('') + `</div></div>`;
     }
     resDiv.innerHTML = statsHtml + `<div class="result-tags">${tagsHtml}</div>`;
 }
@@ -230,31 +249,16 @@ function downloadResults(type) {
     if (lastGeneratedData.length === 0) return;
     const t = translations[currentLanguage];
     const sum = lastGeneratedData.reduce((a, b) => a + b, 0);
-    const min = Math.min(...lastGeneratedData), max = Math.max(...lastGeneratedData);
     const fmt = (n) => (n > 1e9 || n < -1e9 || (n !== 0 && Math.abs(n) < 1e-4)) ? n.toExponential(2) : n.toString();
-
-    let header = `[STATISTICS]\n`;
-    header += `${t.generated}: ${lastGeneratedData.length}\n${t.sum}: ${fmt(sum)}\n${t.average}: ${fmt(sum / lastGeneratedData.length)}\n${t.min}: ${fmt(min)}\n${t.max}: ${fmt(max)}\n\n`;
-
+    let header = `[STATISTICS]\n${t.generated}: ${lastGeneratedData.length}\n${t.sum}: ${fmt(sum)}\n${t.average}: ${fmt(sum / lastGeneratedData.length)}\n${t.min}: ${fmt(Math.min(...lastGeneratedData))}\n${t.max}: ${fmt(Math.max(...lastGeneratedData))}\n\n`;
     if (lastUsedRules.length > 0) {
         header += `[RULE DISTRIBUTION]\n`;
-        lastUsedRules.forEach(r => {
-            if (r.count > 0) {
-                const rMin = r.min === -Infinity ? '*' : r.min, rMax = r.max === Infinity ? '*' : r.max;
-                header += `${r.name} [${rMin} ~ ${rMax}] : ${r.count}\n`;
-            }
-        });
+        lastUsedRules.forEach(r => { if (r.count > 0) header += `${r.name} [${r.min === -Infinity ? '*' : r.min} ~ ${r.max === Infinity ? '*' : r.max}] : ${r.count}\n`; });
         header += `\n`;
     }
-
-    header += `[DATA]\n`;
-    const finalContent = header + lastGeneratedData.join('\n');
-    const blob = new Blob([finalContent], { type: 'text/plain' });
+    const blob = new Blob([header + `[DATA]\n` + lastGeneratedData.join('\n')], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `rng_results_${new Date().getTime()}.${type}`;
-    a.click();
+    const a = document.createElement('a'); a.href = url; a.download = `rng_results_${new Date().getTime()}.${type}`; a.click();
     URL.revokeObjectURL(url);
 }
 
