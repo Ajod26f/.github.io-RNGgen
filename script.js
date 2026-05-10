@@ -83,30 +83,59 @@ function initSlots() {
 
 function saveSettings() {
     const settings = {};
-    SETTINGS_KEYS.forEach(k => {
-        const el = document.getElementById(k);
-        if (el) settings[k] = el.type === "checkbox" ? el.checked : el.value;
+    // すべての設定値をオブジェクトに格納
+    SETTINGS_KEYS.forEach(key => {
+        const el = document.getElementById(key);
+        if (el) {
+            settings[key] = el.type === "checkbox" ? el.checked : el.value;
+        }
     });
-    slotNames[currentSlot] = document.getElementById('slotName').value;
-    localStorage.setItem("rng_names", JSON.stringify(slotNames));
-    localStorage.setItem(`rng_slot_${currentSlot}`, JSON.stringify(settings));
+
+    // スロット名（エイリアス）を保存
+    const name = document.getElementById('slotName').value;
+    slotNames[currentSlot] = name || `-`;
+    
+    // LocalStorageへ書き込み
+    localStorage.setItem("rng_v3_names", JSON.stringify(slotNames));
+    localStorage.setItem(`rng_v3_slot_${currentSlot}`, JSON.stringify(settings));
+    
+    // UI更新と通知
     initSlots();
+    const msg = currentLanguage === 'ja' 
+        ? `スロット ${currentSlot} に保存しました` 
+        : `Saved to Slot ${currentSlot}`;
+    showToast(msg);
 }
 
 function loadSettings() {
-    const data = localStorage.getItem(`rng_slot_${currentSlot}`);
-    if (!data) return;
-    const s = JSON.parse(data);
+    const saved = localStorage.getItem(`rng_v3_slot_${currentSlot}`);
+    if (!saved) {
+        const errorMsg = currentLanguage === 'ja' ? "データがありません" : "No data found";
+        showToast(errorMsg);
+        return;
+    }
+
+    const s = JSON.parse(saved);
+    // 保存された値を各要素に復元
     SETTINGS_KEYS.forEach(k => {
         const el = document.getElementById(k);
-        if (el && s[k] !== undefined) {
-            if (el.type === "checkbox") el.checked = s[k];
-            else el.value = s[k];
+        if (el) {
+            if (el.type === "checkbox") {
+                el.checked = s[k] ?? false;
+            } else {
+                el.value = s[k] ?? "";
+            }
         }
     });
-    updatePrecisionDisplay(document.getElementById("precision").value);
+
+    // 特定の表示オプションを連動して更新
     toggleDecimalOptions();
-    toggleAmountOptions();
+    
+    // 通知を表示
+    const msg = currentLanguage === 'ja' 
+        ? `スロット ${currentSlot} を読み込みました` 
+        : `Loaded Slot ${currentSlot}`;
+    showToast(msg);
 }
 
 function parseExcludes(input) {
@@ -262,4 +291,22 @@ function downloadResults(type) {
     URL.revokeObjectURL(url);
 }
 
+
+function showToast(message) {
+    const oldToast = document.querySelector('.toast');
+    if (oldToast) oldToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+    }, 2500);
+}
 window.onload = () => { initHighlightInputs(); initSlots(); setLanguage('ja'); };
+
