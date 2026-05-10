@@ -1,6 +1,7 @@
 let currentLanguage = "ja";
 let currentSlot = 1;
 let lastGeneratedData = [];
+let lastUsedRules = [];
 
 const SETTINGS_KEYS = [
     "min", "max", "decimalMode", "precision", "amount", "randomAmountMode", 
@@ -19,7 +20,8 @@ const translations = {
         sortMode: "Sort Mode", generate: "Forge Numbers", results: "Results", saveBtn: "Save", loadBtn: "Load",
         advancedSettings: "Advanced Settings", highlightRules: "Highlight Rules (Max 10)",
         generated: "Count", sum: "Sum", average: "Avg", min: "Min", max: "Max", ruleStats: "Rule Stats",
-        howToUse: "How to Use RNG Generator", guide1Title: "Range", guide1Desc: "Set min/max/amount. Big numbers OK.",
+        howToUse: "How to Use RNG Generator",
+        guide1Title: "Range", guide1Desc: "Set min/max/amount. Big numbers OK.",
         guide2Title: "Advanced", guide2Desc: "Adjust Unique, Log, and CSV exclusion.",
         guide3Title: "Preset", guide3Desc: "Alias settings and save to 10 slots.",
         guide4Title: "Export", guide4Desc: "Download TXT/CSV with auto statistics."
@@ -31,7 +33,8 @@ const translations = {
         sortMode: "並び順", generate: "数値を生成", results: "結果表示", saveBtn: "保存", loadBtn: "読み込み",
         advancedSettings: "高度な設定", highlightRules: "ハイライトルール (最大10)",
         generated: "生成数", sum: "合計", average: "平均値", min: "最小値", max: "最大値", ruleStats: "ルール統計",
-        howToUse: "操作ガイド", guide1Title: "基本設定", guide1Desc: "最小・最大・個数を設定。巨大な数値も対応。",
+        howToUse: "操作ガイド",
+        guide1Title: "基本設定", guide1Desc: "最小・最大・個数を設定。巨大な数値も対応。",
         guide2Title: "詳細機能", guide2Desc: "重複排除、対数重み、除外リスト設定可能。",
         guide3Title: "プリセット", guide3Desc: "設定を10個のスロットに保存可能。",
         guide4Title: "書き出し", guide4Desc: "TXT/CSV形式で統計と共に保存可能。"
@@ -40,14 +43,8 @@ const translations = {
 
 let slotNames = JSON.parse(localStorage.getItem("rng_names") || "{}");
 
-function updatePrecisionDisplay(val) {
-    document.getElementById("precisionValue").textContent = val;
-}
-
-function toggleDecimalOptions() {
-    document.getElementById("precisionGroup").style.display = document.getElementById("decimalMode").checked ? "block" : "none";
-}
-
+function updatePrecisionDisplay(val) { document.getElementById("precisionValue").textContent = val; }
+function toggleDecimalOptions() { document.getElementById("precisionGroup").style.display = document.getElementById("decimalMode").checked ? "block" : "none"; }
 function toggleAmountOptions() {
     const isRandom = document.getElementById("randomAmountMode").checked;
     document.getElementById("randomAmountInputs").style.display = isRandom ? "block" : "none";
@@ -122,20 +119,11 @@ function loadSettings() {
 
 function generate() {
     const resDiv = document.getElementById("result");
-    
-    const minRaw = document.getElementById("min").value;
-    const maxRaw = document.getElementById("max").value;
-    const amountRaw = document.getElementById("amount").value;
-    const stepRaw = document.getElementById("step").value;
-    
-    const min = Number(minRaw);
-    const max = Number(maxRaw);
-    const step = Number(stepRaw);
-    const isDec = document.getElementById("decimalMode").checked;
-    const prec = isDec ? Number(document.getElementById("precision").value) : 0;
-    const isLog = document.getElementById("logMode").checked;
-    const isUnique = document.getElementById("unique").checked;
-    const sortMode = document.getElementById("sortMode").value;
+    const minRaw = document.getElementById("min").value, maxRaw = document.getElementById("max").value;
+    const amountRaw = document.getElementById("amount").value, stepRaw = document.getElementById("step").value;
+    const min = Number(minRaw), max = Number(maxRaw), step = Number(stepRaw);
+    const isDec = document.getElementById("decimalMode").checked, prec = isDec ? Number(document.getElementById("precision").value) : 0;
+    const isLog = document.getElementById("logMode").checked, isUnique = document.getElementById("unique").checked;
 
     let errorMsg = "";
     if (minRaw === "" || maxRaw === "" || (!document.getElementById("randomAmountMode").checked && amountRaw === "")) {
@@ -146,61 +134,38 @@ function generate() {
         errorMsg = currentLanguage === "ja" ? "最小値が最大値を超えています。" : "Min cannot be greater than Max.";
     }
 
-    if (errorMsg) {
-        // ⚠アイコンを削除
-        resDiv.innerHTML = `<div class="error">${errorMsg}</div>`;
-        return;
-    }
+    if (errorMsg) { resDiv.innerHTML = `<div class="error">${errorMsg}</div>`; return; }
 
-    let amt;
-    if (document.getElementById("randomAmountMode").checked) {
-        const aMin = Number(document.getElementById("amountMin").value);
-        const aMax = Number(document.getElementById("amountMax").value);
-        amt = Math.floor(Math.random() * (aMax - aMin + 1)) + aMin;
-    } else {
-        amt = Number(amountRaw);
-    }
+    let amt = document.getElementById("randomAmountMode").checked ? 
+        Math.floor(Math.random() * (Number(document.getElementById("amountMax").value) - Number(document.getElementById("amountMin").value) + 1)) + Number(document.getElementById("amountMin").value) : Number(amountRaw);
 
-    if (isUnique) {
-        const rangeCount = Math.floor((max - min) / step) + 1;
-        if (amt > rangeCount) {
-            const msg = currentLanguage === "ja" ? "重複無しで生成する個数が範囲を超えています。" : "Amount exceeds unique range capacity.";
-            resDiv.innerHTML = `<div class="error">${msg}</div>`;
-            return;
-        }
+    if (isUnique && amt > (Math.floor((max - min) / step) + 1)) {
+        const msg = currentLanguage === "ja" ? "重複無しで生成する個数が範囲を超えています。" : "Unique range capacity exceeded.";
+        resDiv.innerHTML = `<div class="error">${msg}</div>`; return;
     }
 
     const exclude = new Set((document.getElementById("exclude").value || "").split(',').map(n => Number(n.trim())).filter(n => !isNaN(n)));
-    let results = [];
-    let attempts = 0;
+    let results = [], attempts = 0;
     while (results.length < amt && attempts < 100000) {
-        let val;
-        if (isLog) {
-            const lMin = Math.log(min || 1e-15), lMax = Math.log(max || 1);
-            val = Math.exp(lMin + Math.random() * (lMax - lMin));
-        } else {
-            val = min + Math.random() * (max - min);
-        }
+        let val = isLog ? Math.exp(Math.log(min || 1e-15) + Math.random() * (Math.log(max || 1) - Math.log(min || 1e-15))) : min + Math.random() * (max - min);
         val = parseFloat((Math.round((val - min) / step) * step + min).toFixed(prec));
-        if (val >= min && val <= max && !exclude.has(val) && (!isUnique || !results.includes(val))) {
-            results.push(val);
-        }
+        if (val >= min && val <= max && !exclude.has(val) && (!isUnique || !results.includes(val))) results.push(val);
         attempts++;
     }
 
     lastGeneratedData = [...results];
-    renderResultsUI(results, min, max, prec, isDec, sortMode);
+    renderResultsUI(results, min, max, prec, isDec);
 }
 
-function renderResultsUI(results, min, max, prec, isDec, sortMode) {
-    const resDiv = document.getElementById("result");
-    const t = translations[currentLanguage];
-    
+function renderResultsUI(results, min, max, prec, isDec) {
+    const resDiv = document.getElementById("result"), t = translations[currentLanguage];
+    const sortMode = document.getElementById("sortMode").value;
     if (sortMode === "asc") results.sort((a, b) => a - b);
     else if (sortMode === "desc") results.sort((a, b) => b - a);
 
     const actualMin = results.length > 0 ? Math.min(...results) : 0;
     const actualMax = results.length > 0 ? Math.max(...results) : 0;
+    const sum = results.reduce((a, b) => a + b, 0);
 
     const hRules = [];
     for (let i = 0; i < 10; i++) {
@@ -217,6 +182,7 @@ function renderResultsUI(results, min, max, prec, isDec, sortMode) {
             });
         }
     }
+    lastUsedRules = hRules;
 
     const tagData = results.map(v => {
         let p = document.getElementById("prefix").value, s = document.getElementById("suffix").value, st = "", cls = ["tag"];
@@ -233,48 +199,57 @@ function renderResultsUI(results, min, max, prec, isDec, sortMode) {
         return { v: Number(v), p, s, st, cls };
     });
 
-    let displayItems = [];
-    if (document.getElementById("groupDuplicates").checked) {
-        const counts = new Map();
-        tagData.forEach(item => {
-            const existing = counts.get(item.v);
-            if (existing) existing.count++;
-            else counts.set(item.v, { ...item, count: 1 });
-        });
-        displayItems = Array.from(counts.values());
-        if (sortMode === "asc") displayItems.sort((a, b) => a.v - b.v);
-        else if (sortMode === "desc") displayItems.sort((a, b) => b.v - a.v);
-    } else {
-        displayItems = tagData.map(d => ({ ...d, count: 1 }));
-    }
+    let displayItems = document.getElementById("groupDuplicates").checked ? Array.from(tagData.reduce((m, item) => {
+        const e = m.get(item.v); if (e) e.count++; else m.set(item.v, { ...item, count: 1 }); return m;
+    }, new Map()).values()) : tagData.map(d => ({ ...d, count: 1 }));
 
     const padLen = document.getElementById("zeroPadding").checked ? Math.max(Math.floor(min).toString().length, Math.floor(max).toString().length) : 0;
-
     const tagsHtml = displayItems.map(i => {
-        const displayVal = isDec ? i.v.toFixed(prec) : i.v.toString().padStart(padLen, '0');
-        return `<span class="${i.cls.join(' ')}" style="${i.st}">${i.p}${displayVal}${i.s}${i.count > 1 ? ' (x' + i.count + ')' : ''}</span>`;
+        const dVal = isDec ? i.v.toFixed(prec) : i.v.toString().padStart(padLen, '0');
+        return `<span class="${i.cls.join(' ')}" style="${i.st}">${i.p}${dVal}${i.s}${i.count > 1 ? ' (x' + i.count + ')' : ''}</span>`;
     }).join('');
+
+    const fmt = (n) => (n > 1e9 || n < -1e9 || (n !== 0 && Math.abs(n) < 1e-4)) ? n.toExponential(2) : n.toLocaleString();
 
     let statsHtml = `<div class="stats">
         <div><strong>${t.generated}</strong>${results.length}</div>
-        <div><strong>${t.sum}</strong>${results.reduce((a,b)=>a+b,0).toLocaleString()}</div>
-        <div><strong>${t.average}</strong>${(results.reduce((a,b)=>a+b,0)/(results.length || 1)).toFixed(prec)}</div>
-        <div><strong>${t.min}</strong>${actualMin}</div>
-        <div><strong>${t.max}</strong>${actualMax}</div>
+        <div><strong>${t.sum}</strong>${fmt(sum)}</div>
+        <div><strong>${t.average}</strong>${fmt(sum / (results.length || 1))}</div>
+        <div><strong>${t.min}</strong>${fmt(actualMin)}</div>
+        <div><strong>${t.max}</strong>${fmt(actualMax)}</div>
     </div>`;
 
     if (hRules.length > 0) {
         statsHtml += `<div class="rule-stats-box"><div class="stats-label">${t.ruleStats}</div><div class="rule-stats-grid">` + 
             hRules.filter(r => r.count > 0).map(r => `<div class="rule-stat-item" style="--line-col: ${r.col}"><span>${r.name}</span><strong>${r.count}</strong></div>`).join('') + `</div></div>`;
     }
-
     resDiv.innerHTML = statsHtml + `<div class="result-tags">${tagsHtml}</div>`;
 }
 
 function downloadResults(type) {
     if (lastGeneratedData.length === 0) return;
-    const content = type === 'csv' ? lastGeneratedData.join(',') : lastGeneratedData.join('\n');
-    const blob = new Blob([content], { type: 'text/plain' });
+    const t = translations[currentLanguage];
+    const sum = lastGeneratedData.reduce((a, b) => a + b, 0);
+    const min = Math.min(...lastGeneratedData), max = Math.max(...lastGeneratedData);
+    const fmt = (n) => (n > 1e9 || n < -1e9 || (n !== 0 && Math.abs(n) < 1e-4)) ? n.toExponential(2) : n.toString();
+
+    let header = `[STATISTICS]\n`;
+    header += `${t.generated}: ${lastGeneratedData.length}\n${t.sum}: ${fmt(sum)}\n${t.average}: ${fmt(sum / lastGeneratedData.length)}\n${t.min}: ${fmt(min)}\n${t.max}: ${fmt(max)}\n\n`;
+
+    if (lastUsedRules.length > 0) {
+        header += `[RULE DISTRIBUTION]\n`;
+        lastUsedRules.forEach(r => {
+            if (r.count > 0) {
+                const rMin = r.min === -Infinity ? '*' : r.min, rMax = r.max === Infinity ? '*' : r.max;
+                header += `${r.name} [${rMin} ~ ${rMax}] : ${r.count}\n`;
+            }
+        });
+        header += `\n`;
+    }
+
+    header += `[DATA]\n`;
+    const finalContent = header + lastGeneratedData.join('\n');
+    const blob = new Blob([finalContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
