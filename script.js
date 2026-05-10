@@ -309,4 +309,3 @@ function showToast(message) {
     }, 2500);
 }
 window.onload = () => { initHighlightInputs(); initSlots(); setLanguage('ja'); };
-
