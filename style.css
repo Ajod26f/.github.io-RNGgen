@@ -263,6 +263,7 @@ input:focus, select:focus {
     border: none; 
     cursor: pointer; 
     color: white; 
+    width: 100%;
 }
 
 .action-btn.outline { 
@@ -407,17 +408,7 @@ button:hover {
 .footer p { font-size: 0.7rem; color: #475569; }
 .footer-status { margin-top: 15px; font-size: 0.6rem; color: #00ffd5; display: flex; align-items: center; justify-content: center; gap: 6px; text-transform: uppercase; letter-spacing: 2px; }
 .status-dot { width: 6px; height: 6px; background: #00ffd5; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #00ffd5; animation: pulse 2s infinite; }
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-@media (max-width: 480px) {
-    .rule-num {
-        width: 100%;
-        text-align: left;
-        margin-bottom: 4px;
-        padding-bottom: 4px;
-        border-bottom: 1px solid rgba(122, 162, 255, 0.2);
-    }
-}
 .rule-stats-box {
     margin-bottom: 20px;
     padding: 12px;
@@ -449,5 +440,3 @@ button:hover {
     border-left: 6px solid var(--line-col, #7aa2ff); 
     box-shadow: inset 4px 0 8px -4px var(--line-col, #7aa2ff);
 }
-.rule-stat-item span { color: #94a3b8; }
-.rule-stat-item strong { color: #f1f5f9; }
