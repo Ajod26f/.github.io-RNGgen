@@ -1,98 +1,77 @@
-# RNGgen
-RNG FORGE
+<div align="center">
+  <img src="https://img.shields.io/badge/RNG_Generator-v3_Pro-38bdf8?style=for-the-badge&logo=javascript&logoColor=white" alt="v3 Pro">
+  <img src="https://img.shields.io/badge/Status-Engineer--Grade-green?style=for-the-badge" alt="Engineer Grade">
+  <img src="https://img.shields.io/badge/Security-Local_Only-orange?style=for-the-badge" alt="Local Only">
+</div>
 
-◆　EN
+<br />
 
-Advanced Random Number Generator Tool for Engineers
+<div align="center">
+  <h1>🛠️ RNG Generator v3 Pro</h1>
+  <p><b>Advanced Random Number Generator Tool for Engineers</b></p>
+  <p>
+    Professional-grade random generation with enterprise-level configuration panels. 
+    <br />
+    <i>"Because apparently integers alone were too emotionally limiting."</i>
+  </p>
+</div>
 
-RNG Generator v3 Pro is a professional-grade random number generation tool designed for engineers and advanced users. In addition to standard random generation, it provides detailed customization features required for practical applications and specialized simulations. Humanity really looked at “random numbers” and decided they needed enterprise-level configuration panels for them. Admirable, honestly.
+---
 
-Main Features
+### Key Features
 
-・Standard Random Generation
-Generate multiple random numbers by specifying the minimum value, maximum value, and quantity.
+<table>
+  <tr>
+    <td width="50%">
+      <h4> Strict Logic</h4>
+      <ul>
+        <li><b>Unique Only:</b> Guaranteed no duplicates.</li>
+        <li><b>Step Control:</b> Fixed interval generation.</li>
+        <li><b>Log Weight:</b> Logarithmic distribution support.</li>
+      </ul>
+    </td>
+    <td width="50%">
+      <h4> Filter & UI</h4>
+      <ul>
+        <li><b>Exclude List:</b> Range support (e.g., 10, 20-50).</li>
+        <li><b>Highlight Rules:</b> Custom colors & tags.</li>
+        <li><b>Presets:</b> 10 slots with LocalStorage persistence.</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
-・Unique Only Mode
-Completely prevents duplicate values from being generated.
+---
 
-・Log Weight Mode
-Generates numbers based on a logarithmic distribution, making smaller values appear more frequently.
+### How to Use
 
-・Exclude List
-Exclude specific numbers from generation targets. Supports multiple values in CSV format.
+#### 1. Range & Quantity
+Set your **Min**, **Max**, and **Amount**. If you're feeling adventurous, use the **Step** to define the granularity (e.g., `0.25`).
 
-・Highlight Rules
-Automatically applies custom colors, prefixes, and suffixes to specified numeric ranges.
+#### 2. Advanced Filtering
+Enter CSV values or ranges in the **Exclusion** box. The system calculates the available "slots" to prevent infinite loops before they even start.
 
-・Preset Saving
-Save settings into up to 10 preset slots. Configurations remain stored even after closing the browser.
+#### 3. Highlighting
+Define numeric ranges to apply specific colors and labels. Perfect for identifying outliers in simulations or stressing edge cases.
 
-How to Use
-Basic Settings
+---
 
-Enter the minimum value, maximum value, and quantity.
+### 🛡️ Security & Privacy
 
-Advanced Settings
+<blockquote>
+  <b>Local-First Architecture:</b> This tool processes everything within your browser context. No data, numbers, or configuration strings ever touch a server.
+</blockquote>
 
-・To generate decimal values, enable Generate Decimals and specify the number of decimal places.
+- **No Tracking:** No cookies, no telemetry.
+- **Validation:** Mathematical clamping ensures `Step` matches `Decimal Places`.
+- **Transparency:** Open-source and modifiable for any engineering workflow.
 
-・To generate values using a fixed interval, enter a value in Step.
-(Example: Step = 0.25 → 0.25, 0.75, 2.00, ...)
-Because apparently integers alone were too emotionally limiting.
+---
 
-・Log Weight randomizes the digit scale within the specified range before generating values.
+### ⚖️ License & Contribution
 
-Notes
+This tool is provided "as-is". Civilization advances one configurable RNG at a time—feel free to fork, modify, and redistribute.
 
-・When using Unique Only Mode, an error will be displayed if the number of available candidates within the specified range is smaller than the requested quantity.
-
-・Configuration data is stored in the browser’s LocalStorage. Please note that settings may be reset when using private/incognito mode or clearing browser cache.
-
-License
-
-This tool may be freely modified and redistributed. Customize and optimize it as needed for your own use. Civilization advances one configurable RNG at a time.
-
-◆　JP
-
-エンジニア向けの高度な乱数生成ツール
-
-RNG Generator v3 Pro は、標準的な乱数生成に加え、実務や特定のシミュレーションで必要とされる詳細なカスタマイズ機能を備えたプロ仕様のツールです。
-
-主な機能
-
-・標準的な乱数生成：最小値、最大値、個数を指定した一括生成。
-
-・重複排除（Unique Only）：生成される数値の重複を完全に排除します。
-
-・対数重み（Log Mode）：小さい数値ほど出現率が高くなる対数分布に基づいた生成が可能です。
-
-・除外リスト（Exclude）：特定の数値を生成対象から除外できます。CSV形式での複数指定に対応しています。
-
-・ハイライトルール：指定した数値範囲に対して、カスタムカラーや接頭辞・接尾辞を自動で適用します。
-
-・プリセット保存：最大10個のスロットに設定を保存でき、ブラウザを閉じても設定を保持します。
-
-
-使用方法
-
-基本設定：最小値、最大値、個数を入力します。
-
-詳細設定（Advanced Settings）：
-
-　・小数を含める場合は「小数を生成」を有効にし、桁数を指定します。
- 
-　・特定の倍数で生成したい場合は「Step」を入力します。(Ex : Step = 0.25 -> 0.25 , 0.75 , 2...)
- 
-　・「Log Weight」は範囲内で「桁」をランダムにし、生成を行います。
-
-注意事項
-
-・重複なしモード使用時、指定した範囲内の候補が生成個数を下回る場合、エラーが表示されます。
-
-・設定データはブラウザのLocalStorageに保存されます。シークレットモードやキャッシュの削除によってリセットされる可能性があるためご注意ください。
-
-ライセンス
-
-本ツールは自由に変更・再配布が可能です。用途に合わせて最適化してご利用ください。
-
-Good and Flexible as f***!!
+<div align="right">
+  <i>Developed for humanity's need for better random numbers.</i>
+</div>
