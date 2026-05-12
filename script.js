@@ -3,6 +3,9 @@ let currentSlot = 1;
 let lastGeneratedData = [];
 let lastUsedRules = [];
 
+// Per-slot counters
+let slotCounters = JSON.parse(localStorage.getItem("rng_v3_counters") || "{}");
+
 const SETTINGS_KEYS = [
     "min", "max", "decimalMode", "precision", "amount", "randomAmountMode", 
     "amountMin", "amountMax", "step", "exclude", "prefix", "suffix", 
@@ -24,7 +27,9 @@ const translations = {
         guide1Title: "Range", guide1Desc: "Set min/max/amount. Big numbers OK.",
         guide2Title: "Advanced", guide2Desc: "Adjust Unique, Log, and CSV exclusion (e.g. 10, 20-50).",
         guide3Title: "Preset", guide3Desc: "Alias settings and save to 10 slots.",
-        guide4Title: "Export", guide4Desc: "Download TXT/CSV with auto statistics."
+        guide4Title: "Export", guide4Desc: "Download TXT/CSV with auto statistics.",
+        logModeMinError: "When Log Mode is enabled, Min must be greater than 0.",
+        counters: "Counters", attempts: "Attempts", totalGenerated: "Total Generated", resetCounters: "Reset Counters"
     },
     ja: {
         subtitle: "プロ仕様RNGツール", settings: "生成設定", minimum: "最小値", maximum: "最大値",
@@ -37,7 +42,9 @@ const translations = {
         guide1Title: "基本設定", guide1Desc: "最小・最大・個数を設定。巨大な数値も対応。",
         guide2Title: "詳細機能", guide2Desc: "重複排除、除外（10, 20-50形式対応）設定可能。",
         guide3Title: "プリセット", guide3Desc: "設定を10個のスロットに保存可能。",
-        guide4Title: "書き出し", guide4Desc: "TXT/CSV形式で統計と共に保存可能。"
+        guide4Title: "書き出し", guide4Desc: "TXT/CSV形式で統計と共に保存可能。",
+        logModeMinError: "対数重み付けモードでは、最小値は0より大きい必要があります。",
+        counters: "カウンター", attempts: "試行回数", totalGenerated: "累計生成数", resetCounters: "リセット"
     }
 };
 
@@ -58,13 +65,14 @@ function setLanguage(l) {
     document.querySelectorAll("[data-lang]").forEach(el => {
         if (t[el.dataset.lang]) el.textContent = t[el.dataset.lang];
     });
+    updateCounterDisplay();
 }
 
 function initHighlightInputs() {
     const container = document.getElementById("highlightRulesContainer");
     let html = "";
     for (let i = 0; i < 10; i++) {
-        html += `<div class="rule-row"><span class="rule-num">${i + 1}</span><input type="text" id="hName_${i}" placeholder="Name"><input type="number" id="hMin_${i}" placeholder="Min"><input type="number" id="hMax_${i}" placeholder="Max"><input type="text" id="hPre_${i}" placeholder="Pre"><input type="text" id="hSuf_${i}" placeholder="Suf"><input type="color" id="hCol_${i}" value="#7aa2ff"></div>`;
+        html += `<div class="rule-row"><span class="rule-num">${i + 1}</span><input type="text" id="hName_${i}" placeholder="Name"><input type="number" id="hMin_${i}" placeholder="Min"><input type="number" id="hMax_${i}" placeholder="Max"><input type="text" id="hPre_${i}" placeholder="Prefix"><input type="text" id="hSuf_${i}" placeholder="Suffix"><input type="color" id="hCol_${i}" value="#7aa2ff"></div>`;
     }
     container.innerHTML = html;
 }
@@ -75,9 +83,55 @@ function initSlots() {
     for (let i = 1; i <= 10; i++) {
         const btn = document.createElement('button');
         btn.className = `slot-btn ${i === currentSlot ? 'active' : ''}`;
-        btn.onclick = () => { currentSlot = i; initSlots(); document.getElementById('slotName').value = slotNames[i] || ""; loadSettings(); };
+        btn.onclick = () => { currentSlot = i; initSlots(); document.getElementById('slotName').value = slotNames[i] || ""; updateCounterDisplay(); loadSettings(); };
         btn.innerHTML = `<div>${i}</div><div class="slot-alias">${slotNames[i] || ""}</div>`;
         container.appendChild(btn);
+    }
+}
+
+function updateCounterDisplay() {
+    const t = translations[currentLanguage];
+    const counter = slotCounters[currentSlot] || { attempts: 0, total: 0 };
+    
+    let counterHtml = document.getElementById("counterDisplay");
+    if (!counterHtml) {
+        counterHtml = document.createElement('div');
+        counterHtml.id = "counterDisplay";
+        counterHtml.className = "counter-display";
+        document.querySelector('.preset-section').appendChild(counterHtml);
+    }
+    
+    counterHtml.innerHTML = `
+        <div class="counter-item">
+            <span class="counter-label">${t.attempts}</span>
+            <span class="counter-value">${counter.attempts}</span>
+        </div>
+        <div class="counter-item">
+            <span class="counter-label">${t.totalGenerated}</span>
+            <span class="counter-value">${counter.total}</span>
+        </div>
+        <button onclick="resetSlotCounters()" class="reset-counter-btn" style="margin-top: 10px; padding: 6px 10px; font-size: 0.7rem;">${t.resetCounters}</button>
+    `;
+}
+
+function incrementCounters(totalGenerated) {
+    if (!slotCounters[currentSlot]) {
+        slotCounters[currentSlot] = { attempts: 0, total: 0 };
+    }
+    slotCounters[currentSlot].attempts++;
+    slotCounters[currentSlot].total += totalGenerated;
+    localStorage.setItem("rng_v3_counters", JSON.stringify(slotCounters));
+    updateCounterDisplay();
+}
+
+function resetSlotCounters() {
+    const t = translations[currentLanguage];
+    if (confirm(t.currentLanguage === 'ja' ? `スロット ${currentSlot} のカウンターをリセットしますか？` : `Reset counters for Slot ${currentSlot}?`)) {
+        slotCounters[currentSlot] = { attempts: 0, total: 0 };
+        localStorage.setItem("rng_v3_counters", JSON.stringify(slotCounters));
+        updateCounterDisplay();
+        const msg = currentLanguage === 'ja' ? "カウンターをリセットしました" : "Counters reset";
+        showToast(msg);
     }
 }
 
@@ -130,6 +184,7 @@ function loadSettings() {
 
     // 特定の表示オプションを連動して更新
     toggleDecimalOptions();
+    toggleAmountOptions();
     
     // 通知を表示
     const msg = currentLanguage === 'ja' 
@@ -171,18 +226,32 @@ function generate() {
     const minStepLimit = isDec ? Math.pow(10, -prec) : 1;
     if (step < minStepLimit) step = minStepLimit;
 
-    let errorMsg = "";
+    // Collect all errors
+    let errors = [];
+    
     if (minRaw === "" || maxRaw === "" || (!document.getElementById("randomAmountMode").checked && amountRaw === "")) {
-        errorMsg = currentLanguage === "ja" ? "最小値、最大値、個数のいずれかが空欄です。" : "Min, Max, or Amount is empty.";
-    } else if (stepRaw === "" || step <= 0) {
-        errorMsg = currentLanguage === "ja" ? "刻み値を正しく入力してください。" : "Please enter a valid Step.";
-    } else if (min > max) {
-        errorMsg = currentLanguage === "ja" ? "最小値が最大値を超えています。" : "Min cannot be greater than Max.";
+        errors.push(currentLanguage === "ja" ? "最小値、最大値、個数のいずれかが空欄です。" : "Min, Max, or Amount is empty.");
     }
-    if (errorMsg) { resDiv.innerHTML = `<div class="error">${errorMsg}</div>`; return; }
+    if (stepRaw === "" || step <= 0) {
+        errors.push(currentLanguage === "ja" ? "刻み値を正しく入力してください。" : "Please enter a valid Step.");
+    }
+    if (min > max) {
+        errors.push(currentLanguage === "ja" ? "最小値が最大値を超えています。" : "Min cannot be greater than Max.");
+    }
+    if (isLog && min <= 0) {
+        errors.push(translations[currentLanguage].logModeMinError);
+    }
+    
+    // Display all errors at once
+    if (errors.length > 0) {
+        const errorHtml = errors.map(e => `<div class="error">${e}</div>`).join('');
+        resDiv.innerHTML = errorHtml;
+        return;
+    }
 
     let amt = document.getElementById("randomAmountMode").checked ? 
-        Math.floor(Math.random() * (Number(document.getElementById("amountMax").value) - Number(document.getElementById("amountMin").value) + 1)) + Number(document.getElementById("amountMin").value) : Number(amountRaw);
+        Math.floor(Math.random() * (Number(document.getElementById("amountMax").value) - Number(document.getElementById("amountMin").value) + 1)) + Number(document.getElementById("amountMin").value) :
+        Number(amountRaw);
 
     const excludes = parseExcludes(document.getElementById("exclude").value);
 
@@ -227,8 +296,11 @@ function generate() {
     }
 
     lastGeneratedData = [...results];
+    // Increment counters after successful generation
+    incrementCounters(results.length);
     renderResultsUI(results, min, max, prec, isDec);
 }
+
 function renderResultsUI(results, min, max, prec, isDec) {
     const resDiv = document.getElementById("result"), t = translations[currentLanguage];
     const sortMode = document.getElementById("sortMode").value;
@@ -243,7 +315,7 @@ function renderResultsUI(results, min, max, prec, isDec) {
     for (let i = 0; i < 10; i++) {
         const hMin = document.getElementById(`hMin_${i}`).value, hMax = document.getElementById(`hMax_${i}`).value;
         if (hMin !== "" || hMax !== "") {
-            hRules.push({ min: hMin === "" ? -Infinity : Number(hMin), max: hMax === "" ? Infinity : Number(hMax), pre: document.getElementById(`hPre_${i}`).value, suf: document.getElementById(`hSuf_${i}`).value, col: document.getElementById(`hCol_${i}`).value, name: document.getElementById(`hName_${i}`).value || `Rule ${i+1}`, count: 0 });
+            hRules.push({ min: hMin === "" ? -Infinity : Number(hMin), max: hMax === "" ? Infinity : Number(hMax), pre: document.getElementById(`hPre_${i}`).value, suf: document.getElementById(`hSuf_${i}`).value, name: document.getElementById(`hName_${i}`).value, col: document.getElementById(`hCol_${i}`).value, count: 0 });
         }
     }
     lastUsedRules = hRules;
@@ -276,7 +348,7 @@ function renderResultsUI(results, min, max, prec, isDec) {
     let statsHtml = `<div class="stats"><div><strong>${t.generated}</strong>${results.length}</div><div><strong>${t.sum}</strong>${fmt(sum)}</div><div><strong>${t.average}</strong>${fmt(sum / (results.length || 1))}</div><div><strong>${t.min}</strong>${fmt(actualMin)}</div><div><strong>${t.max}</strong>${fmt(actualMax)}</div></div>`;
 
     if (hRules.length > 0) {
-        statsHtml += `<div class="rule-stats-box"><div class="stats-label">${t.ruleStats}</div><div class="rule-stats-grid">` + hRules.filter(r => r.count > 0).map(r => `<div class="rule-stat-item" style="--line-col: ${r.col}"><span>${r.name}</span><strong>${r.count}</strong></div>`).join('') + `</div></div>`;
+        statsHtml += `<div class="rule-stats-box"><div class="stats-label">${t.ruleStats}</div><div class="rule-stats-grid">` + hRules.filter(r => r.count > 0).map(r => `<div class="rule-stat-item" style="--line-col:${r.col}">${r.name || 'Rule'}: ${r.count}</div>`).join('') + `</div></div>`;
     }
     resDiv.innerHTML = statsHtml + `<div class="result-tags">${tagsHtml}</div>`;
 }
@@ -315,4 +387,4 @@ function showToast(message) {
         setTimeout(() => toast.remove(), 400);
     }, 2500);
 }
-window.onload = () => { initHighlightInputs(); initSlots(); setLanguage('ja'); };
+window.onload = () => { initHighlightInputs(); initSlots(); setLanguage('ja'); updateCounterDisplay(); };
