@@ -33,8 +33,8 @@ const translations = {
         logModeMinError: "When Log Mode is enabled, Min must be greater than 0.",
         counters: "Counters", attempts: "Attempts", totalGenerated: "Total Generated", resetCounters: "Reset Counters",
         resultOptions: "Result Options", appendResults: "Append to Previous", 
-        addIndex: "Add Index to Prefix", // 修正
-        maintainIndex: "Maintain Index After Clear", // 修正
+        addIndex: "Add Index to Prefix",
+        maintainIndex: "Maintain Index After Clear",
         clear: "Clear", 
         resultExceedsLimit: "Results cannot exceed 100,000 items. Please clear the results first.",
         resultCleared: "Results cleared.",
