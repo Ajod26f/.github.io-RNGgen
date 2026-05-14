@@ -2,6 +2,7 @@ let currentLanguage = "ja";
 let currentSlot = 1;
 let lastGeneratedData = [];
 let lastUsedRules = [];
+let currentIndexCounter = 0;
 
 // Per-slot counters
 let slotCounters = JSON.parse(localStorage.getItem("rng_v3_counters") || "{}");
@@ -9,7 +10,8 @@ let slotCounters = JSON.parse(localStorage.getItem("rng_v3_counters") || "{}");
 const SETTINGS_KEYS = [
     "min", "max", "decimalMode", "precision", "amount", "randomAmountMode", 
     "amountMin", "amountMax", "step", "exclude", "prefix", "suffix", 
-    "logMode", "zeroPadding", "sortMode", "groupDuplicates", "unique"
+    "logMode", "zeroPadding", "sortMode", "groupDuplicates", "unique",
+    "appendResults", "addIndex", "maintainIndex"
 ];
 for (let i = 0; i < 10; i++) {
     SETTINGS_KEYS.push(`hName_${i}`, `hMin_${i}`, `hMax_${i}`, `hPre_${i}`, `hSuf_${i}`, `hCol_${i}`);
@@ -29,7 +31,15 @@ const translations = {
         guide3Title: "Preset", guide3Desc: "Alias settings and save to 10 slots.",
         guide4Title: "Export", guide4Desc: "Download TXT/CSV with auto statistics.",
         logModeMinError: "When Log Mode is enabled, Min must be greater than 0.",
-        counters: "Counters", attempts: "Attempts", totalGenerated: "Total Generated", resetCounters: "Reset Counters"
+        counters: "Counters", attempts: "Attempts", totalGenerated: "Total Generated", resetCounters: "Reset Counters",
+        resultOptions: "Result Options", appendResults: "Append to Previous", 
+        addIndex: "Add Index to Prefix", // 修正
+        maintainIndex: "Maintain Index After Clear", // 修正
+        clear: "Clear", 
+        resultExceedsLimit: "Results cannot exceed 100,000 items. Please clear the results first.",
+        resultCleared: "Results cleared.",
+        amountExceedsLimit: "Cannot generate more than 10,001 items at once. Please reduce the amount.",
+        step: "Step", exclude: "Exclude (csv)", prefix: "Prefix", suffix: "Suffix"
     },
     ja: {
         subtitle: "プロ仕様RNGツール", settings: "生成設定", minimum: "最小値", maximum: "最大値",
@@ -44,7 +54,15 @@ const translations = {
         guide3Title: "プリセット", guide3Desc: "設定を10個のスロットに保存可能。",
         guide4Title: "書き出し", guide4Desc: "TXT/CSV形式で統計と共に保存可能。",
         logModeMinError: "対数重み付けモードでは、最小値は0より大きい必要があります。",
-        counters: "カウンター", attempts: "試行回数", totalGenerated: "累計生成数", resetCounters: "リセット"
+        counters: "カウンター", attempts: "試行回数", totalGenerated: "累計生成数", resetCounters: "リセット",
+        resultOptions: "結果オプション", appendResults: "前の結果に追加", 
+        addIndex: "接頭辞に生成番号を追加",
+        maintainIndex: "結果クリア後も生成番号を維持", 
+        clear: "クリア", 
+        resultExceedsLimit: "結果は100,000個以上維持することはできません。結果をクリアしてください。",
+        resultCleared: "結果をクリアしました。",
+        amountExceedsLimit: "一度に10,001個以上は生成できません。個数を減らしてください。",
+        step: "刻み値", exclude: "除外 (csv)", prefix: "接頭辞", suffix: "接尾辞"
     }
 };
 
@@ -126,7 +144,7 @@ function incrementCounters(totalGenerated) {
 
 function resetSlotCounters() {
     const t = translations[currentLanguage];
-    if (confirm(t.currentLanguage === 'ja' ? `スロット ${currentSlot} のカウンターをリセットしますか？` : `Reset counters for Slot ${currentSlot}?`)) {
+    if (confirm(currentLanguage === 'ja' ? `スロット ${currentSlot} のカウンターをリセットしますか？` : `Reset counters for Slot ${currentSlot}?`)) {
         slotCounters[currentSlot] = { attempts: 0, total: 0 };
         localStorage.setItem("rng_v3_counters", JSON.stringify(slotCounters));
         updateCounterDisplay();
@@ -137,7 +155,6 @@ function resetSlotCounters() {
 
 function saveSettings() {
     const settings = {};
-    // すべての設定値をオブジェクトに格納
     SETTINGS_KEYS.forEach(key => {
         const el = document.getElementById(key);
         if (el) {
@@ -145,15 +162,12 @@ function saveSettings() {
         }
     });
 
-    // スロット名（エイリアス）を保存
     const name = document.getElementById('slotName').value;
     slotNames[currentSlot] = name || `-`;
     
-    // LocalStorageへ書き込み
     localStorage.setItem("rng_v3_names", JSON.stringify(slotNames));
     localStorage.setItem(`rng_v3_slot_${currentSlot}`, JSON.stringify(settings));
     
-    // UI更新と通知
     initSlots();
     const msg = currentLanguage === 'ja' 
         ? `スロット ${currentSlot} に保存しました` 
@@ -170,7 +184,6 @@ function loadSettings() {
     }
 
     const s = JSON.parse(saved);
-    // 保存された値を各要素に復元
     SETTINGS_KEYS.forEach(k => {
         const el = document.getElementById(k);
         if (el) {
@@ -182,11 +195,9 @@ function loadSettings() {
         }
     });
 
-    // 特定の表示オプションを連動して更新
     toggleDecimalOptions();
     toggleAmountOptions();
     
-    // 通知を表示
     const msg = currentLanguage === 'ja' 
         ? `スロット ${currentSlot} を読み込みました` 
         : `Loaded Slot ${currentSlot}`;
@@ -226,9 +237,7 @@ function generate() {
     const minStepLimit = isDec ? Math.pow(10, -prec) : 1;
     if (step < minStepLimit) step = minStepLimit;
 
-    // Collect all errors
     let errors = [];
-    
     if (minRaw === "" || maxRaw === "" || (!document.getElementById("randomAmountMode").checked && amountRaw === "")) {
         errors.push(currentLanguage === "ja" ? "最小値、最大値、個数のいずれかが空欄です。" : "Min, Max, or Amount is empty.");
     }
@@ -242,7 +251,6 @@ function generate() {
         errors.push(translations[currentLanguage].logModeMinError);
     }
     
-    // Display all errors at once
     if (errors.length > 0) {
         const errorHtml = errors.map(e => `<div class="error">${e}</div>`).join('');
         resDiv.innerHTML = errorHtml;
@@ -253,8 +261,22 @@ function generate() {
         Math.floor(Math.random() * (Number(document.getElementById("amountMax").value) - Number(document.getElementById("amountMin").value) + 1)) + Number(document.getElementById("amountMin").value) :
         Number(amountRaw);
 
-    const excludes = parseExcludes(document.getElementById("exclude").value);
+    if (amt >= 10001) {
+        resDiv.innerHTML = `<div class="error">${translations[currentLanguage].amountExceedsLimit}</div>`;
+        return;
+    }
 
+    // --- インデックスのリセット判定 (ここが修正ポイント) ---
+    const shouldAppend = document.getElementById("appendResults").checked;
+    const maintainIndex = document.getElementById("maintainIndex").checked;
+
+    // 「追加モード」がオフで、かつ「インデックス維持」もオフなら、今回の生成前に0に戻す
+    if (!shouldAppend && !maintainIndex) {
+        currentIndexCounter = 0;
+    }
+    // --------------------------------------------------
+
+    const excludes = parseExcludes(document.getElementById("exclude").value);
     const rangeCount = Math.floor(((max - min) + (step * 0.000001)) / step) + 1;
 
     if (isUnique) {
@@ -295,21 +317,43 @@ function generate() {
         attempts++;
     }
 
-    lastGeneratedData = [...results];
-    // Increment counters after successful generation
+    // データの作成（currentIndexCounterをベースにindexを振る）
+    const newData = results.map((v, idx) => ({
+        value: v,
+        indexAtGeneration: currentIndexCounter + idx + 1
+    }));
+
+    if (shouldAppend && lastGeneratedData.length > 0) {
+        lastGeneratedData = [...lastGeneratedData, ...newData];
+    } else {
+        lastGeneratedData = [...newData];
+    }
+
+    if (lastGeneratedData.length > 100000) {
+        const t = translations[currentLanguage];
+        resDiv.innerHTML = `<div class="error">${t.resultExceedsLimit}</div>`;
+        lastGeneratedData = [];
+        currentIndexCounter = 0;
+        return;
+    }
+
     incrementCounters(results.length);
-    renderResultsUI(results, min, max, prec, isDec);
+    // 次回の生成（追加モード用）のためにカウンターを進める
+    currentIndexCounter += results.length; 
+    renderResultsUI(min, max, prec, isDec);
 }
 
-function renderResultsUI(results, min, max, prec, isDec) {
+function renderResultsUI(min, max, prec, isDec) {
     const resDiv = document.getElementById("result"), t = translations[currentLanguage];
+    let results = [...lastGeneratedData];
+    
     const sortMode = document.getElementById("sortMode").value;
-    if (sortMode === "asc") results.sort((a, b) => a - b);
-    else if (sortMode === "desc") results.sort((a, b) => b - a);
+    if (sortMode === "asc") results.sort((a, b) => a.value - b.value);
+    else if (sortMode === "desc") results.sort((a, b) => b.value - a.value);
 
-    const actualMin = results.length > 0 ? Math.min(...results) : 0;
-    const actualMax = results.length > 0 ? Math.max(...results) : 0;
-    const sum = results.reduce((a, b) => a + b, 0);
+    const actualMin = results.length > 0 ? Math.min(...results.map(r => r.value)) : 0;
+    const actualMax = results.length > 0 ? Math.max(...results.map(r => r.value)) : 0;
+    const sum = results.reduce((a, b) => a + b.value, 0);
 
     const hRules = [];
     for (let i = 0; i < 10; i++) {
@@ -320,8 +364,13 @@ function renderResultsUI(results, min, max, prec, isDec) {
     }
     lastUsedRules = hRules;
 
-    const tagData = results.map(v => {
+    const addIndexMode = document.getElementById("addIndex").checked;
+    const tagData = results.map((item) => {
+        const v = item.value;
         let p = document.getElementById("prefix").value, s = document.getElementById("suffix").value, st = "", cls = ["tag"];
+        if (addIndexMode) {
+            p = `<span class="index-prefix">#${item.indexAtGeneration}</span> ` + p;
+        }
         if (v === actualMin) cls.push("min-tag"); if (v === actualMax) cls.push("max-tag");
         for (let r of hRules) {
             if (v >= r.min && v <= r.max) {
@@ -331,12 +380,32 @@ function renderResultsUI(results, min, max, prec, isDec) {
                 cls.push("custom-highlight"); break;
             }
         }
-        return { v: Number(v), p, s, st, cls };
+        return { v: Number(v), idx: item.indexAtGeneration, p, s, st, cls };
     });
 
-    let displayItems = document.getElementById("groupDuplicates").checked ? Array.from(tagData.reduce((m, item) => {
-        const e = m.get(item.v); if (e) e.count++; else m.set(item.v, { ...item, count: 1 }); return m;
-    }, new Map()).values()) : tagData.map(d => ({ ...d, count: 1 }));
+    let displayItems;
+    if (document.getElementById("groupDuplicates").checked) {
+        const grouped = new Map();
+        tagData.forEach(item => {
+            const key = item.v.toString();
+            if (!grouped.has(key)) {
+                grouped.set(key, { ...item, count: 1 });
+            } else {
+                const existing = grouped.get(key);
+                existing.count++;
+                // Update to max index
+                existing.idx = Math.max(existing.idx, item.idx);
+                // Update prefix with max index
+                if (addIndexMode) {
+                    const prefix = document.getElementById("prefix").value;
+                    existing.p = `<span class="index-prefix">#${existing.idx}</span> ` + prefix;
+                }
+            }
+        });
+        displayItems = Array.from(grouped.values());
+    } else {
+        displayItems = tagData.map(d => ({ ...d, count: 1 }));
+    }
 
     const padLen = document.getElementById("zeroPadding").checked ? Math.max(Math.floor(min).toString().length, Math.floor(max).toString().length) : 0;
     const tagsHtml = displayItems.map(i => {
@@ -345,6 +414,7 @@ function renderResultsUI(results, min, max, prec, isDec) {
     }).join('');
 
     const fmt = (n) => (n > 1e9 || n < -1e9 || (n !== 0 && Math.abs(n) < 1e-4)) ? n.toExponential(2) : n.toLocaleString();
+    const resultValues = results.map(r => r.value);
     let statsHtml = `<div class="stats"><div><strong>${t.generated}</strong>${results.length}</div><div><strong>${t.sum}</strong>${fmt(sum)}</div><div><strong>${t.average}</strong>${fmt(sum / (results.length || 1))}</div><div><strong>${t.min}</strong>${fmt(actualMin)}</div><div><strong>${t.max}</strong>${fmt(actualMax)}</div></div>`;
 
     if (hRules.length > 0) {
@@ -353,23 +423,33 @@ function renderResultsUI(results, min, max, prec, isDec) {
     resDiv.innerHTML = statsHtml + `<div class="result-tags">${tagsHtml}</div>`;
 }
 
+function clearResults() {
+    const t = translations[currentLanguage];
+    lastGeneratedData = [];
+    if (!document.getElementById("maintainIndex").checked) {
+        currentIndexCounter = 0;
+    }
+    document.getElementById("result").innerHTML = `<span style="color: #64748b;">Ready...</span>`;
+    showToast(t.resultCleared);
+}
+
 function downloadResults(type) {
     if (lastGeneratedData.length === 0) return;
     const t = translations[currentLanguage];
-    const sum = lastGeneratedData.reduce((a, b) => a + b, 0);
+    const resultValues = lastGeneratedData.map(item => item.value);
+    const sum = resultValues.reduce((a, b) => a + b, 0);
     const fmt = (n) => (n > 1e9 || n < -1e9 || (n !== 0 && Math.abs(n) < 1e-4)) ? n.toExponential(2) : n.toString();
-    let header = `[STATISTICS]\n${t.generated}: ${lastGeneratedData.length}\n${t.sum}: ${fmt(sum)}\n${t.average}: ${fmt(sum / lastGeneratedData.length)}\n${t.min}: ${fmt(Math.min(...lastGeneratedData))}\n${t.max}: ${fmt(Math.max(...lastGeneratedData))}\n\n`;
+    let header = `[STATISTICS]\n${t.generated}: ${resultValues.length}\n${t.sum}: ${fmt(sum)}\n${t.average}: ${fmt(sum / resultValues.length)}\n${t.min}: ${fmt(Math.min(...resultValues))}\n${t.max}: ${fmt(Math.max(...resultValues))}\n\n`;
     if (lastUsedRules.length > 0) {
         header += `[RULE DISTRIBUTION]\n`;
         lastUsedRules.forEach(r => { if (r.count > 0) header += `${r.name} [${r.min === -Infinity ? '*' : r.min} ~ ${r.max === Infinity ? '*' : r.max}] : ${r.count}\n`; });
         header += `\n`;
     }
-    const blob = new Blob([header + `[DATA]\n` + lastGeneratedData.join('\n')], { type: 'text/plain' });
+    const blob = new Blob([header + `[DATA]\n` + resultValues.join('\n')], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `rng_results_${new Date().getTime()}.${type}`; a.click();
     URL.revokeObjectURL(url);
 }
-
 
 function showToast(message) {
     const oldToast = document.querySelector('.toast');
@@ -387,4 +467,5 @@ function showToast(message) {
         setTimeout(() => toast.remove(), 400);
     }, 2500);
 }
+
 window.onload = () => { initHighlightInputs(); initSlots(); setLanguage('ja'); updateCounterDisplay(); };
