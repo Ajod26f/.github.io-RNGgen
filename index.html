@@ -124,7 +124,23 @@
                     </select>
                 </div>
 
-                <button onclick="generate()" data-lang="generate" style="margin-bottom: 20px;">Forge Numbers</button>
+                <div style="border-top: 1px solid #334155; padding-top: 15px; margin-top: 15px;">
+                    <label style="color: #7aa2ff; font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; display: block;">📊 <span data-lang="resultOptions">Result Options</span></label>
+                    <div class="checkbox">
+                        <input type="checkbox" id="appendResults">
+                        <label for="appendResults" data-lang="appendResults">Append to Previous Results</label>
+                    </div>
+                    <div class="checkbox">
+                        <input type="checkbox" id="addIndex">
+                        <label for="addIndex" data-lang="addIndex">Add Index to Prefix</label>
+                    </div>
+                    <div class="checkbox">
+                        <input type="checkbox" id="maintainIndex">
+                        <label for="maintainIndex" data-lang="maintainIndex">Maintain Index After Clear</label>
+                    </div>
+                </div>
+
+                <button onclick="generate()" data-lang="generate" style="margin-bottom: 20px; margin-top: 15px;">Forge Numbers</button>
 
                 <div class="preset-section">
                     <label class="preset-label">PRESET SLOTS (1-10)</label>
@@ -145,8 +161,10 @@
                     <div style="display: flex; gap: 8px;">
                         <button onclick="downloadResults('txt')" class="action-btn outline" style="padding: 5px 12px; width: auto; font-size: 0.65rem; margin-top: 0;">TXT</button>
                         <button onclick="downloadResults('csv')" class="action-btn outline" style="padding: 5px 12px; width: auto; font-size: 0.65rem; margin-top: 0;">CSV</button>
+                        <button onclick="clearResults()" class="action-btn outline" style="padding: 5px 12px; width: auto; font-size: 0.65rem; margin-top: 0; background: rgba(239, 68, 68, 0.2); color: #ff9494; border-color: rgba(239, 68, 68, 0.4);" data-lang="clearResults">Clear</button>
                     </div>
                 </div>
+                <div id="resultWarning" style="display: none; margin-bottom: 15px;"></div>
                 <div class="result" id="result">
                     <span style="color: #64748b;">Ready...</span>
                 </div>
